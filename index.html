@@ -1,0 +1,2970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红二·六军团常德足迹 · 长征任务链</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://jsd.onmicrosoft.cn/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimHei", "PingFang SC", "思源宋体", serif;
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #f7f1e6;
+        }
+
+        /* 全局纸张纹理质感 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ========== 页面水印 ========== */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 48px;
+            color: rgba(122, 0, 0, 0.08);
+            font-weight: bold;
+            letter-spacing: 8px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 99990;
+            user-select: none;
+        }
+
+        /* ========== 1. 启动封面 ========== */
+        #startScreen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at top left, rgba(255,215,0,.14), transparent 35%),
+                linear-gradient(135deg, #5a0000 0%, #3d0000 45%, #1a0000 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+            animation: fadeIn 1s ease;
+        }
+
+        #startScreen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        #startScreen.hide {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.08);
+            transition: opacity .8s ease, transform .8s ease;
+        }
+
+        .start-inner {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 520px;
+            width: 90%;
+        }
+
+        .start-top {
+            margin-bottom: 24px;
+        }
+
+        .start-badge-icon {
+            font-size: 64px;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .start-subtitle-line {
+            font-size: 15px;
+            letter-spacing: 6px;
+            color: #ffd700;
+            text-transform: uppercase;
+            font-weight: 50;
+        }
+
+        .start-main-title {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            margin: 0 0 16px;
+            color: #fffef9;
+            text-shadow: 0 0 18px rgba(255,215,0,.35);
+            font-family: "思源宋体", "SimHei", serif;
+        }
+
+        .start-divider {
+            width: 180px;
+            height: 2px;
+            margin: 0 auto 24px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+        }
+
+        .start-lead {
+            font-size: 16px;
+            line-height: 1.9;
+            color: rgba(255,255,255,.86);
+            margin-bottom: 28px;
+        }
+
+        .start-card {
+            background: rgba(255,255,255,.045);
+            border: 1px solid rgba(212,175,55,.22);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .start-card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .start-card-info {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 13px;
+            color: rgba(255,255,255,.75);
+        }
+
+        .start-btn-large {
+            width: 100%;
+            height: 56px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ffd700, #d4af37);
+            color: #5a0000;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(212,175,55,.35);
+            transition: .3s ease;
+            letter-spacing: 2px;
+        }
+
+        .start-btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(212,175,55,.45);
+        }
+
+        .btn-arrow {
+            font-size: 20px;
+            transition: .3s ease;
+        }
+
+        .start-btn-large:hover .btn-arrow {
+            transform: translateX(4px);
+        }
+
+        .start-tip-small {
+            margin-top: 18px;
+            font-size: 13px;
+            color: rgba(255,255,255,.55);
+            line-height: 1.6;
+        }
+
+        .clear-progress-tip {
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* ========== 2. 游戏主界面 ========== */
+        #gameScreen {
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.3s;
+            position: relative;
+            z-index: 2;
+        }
+        #gameScreen.show { opacity: 1; }
+
+        /* 顶部标题栏 */
+        .header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 64px;
+            background: linear-gradient(135deg, #5a0000 0%, #7a0e0e 50%, #8e1b1b 100%);
+            color: white;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 3px 15px rgba(60,0,0,0.5);
+            border-bottom: 2px solid #d4af37;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+            font-family: "思源宋体", serif;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.25);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #d4af37;
+        }
+        .star-icon { color: #ffd700; font-size: 18px; }
+        .score-num { font-weight: bold; font-size: 18px; color: #ffd700; }
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(212,175,55,0.5);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .icon-btn:hover {
+            background: rgba(212,175,55,0.3);
+            transform: scale(1.05);
+        }
+        .end-journey-btn {
+            padding: 6px 16px;
+            background: linear-gradient(135deg, #d4af37, #b8860b);
+            color: #5a0000;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+        .end-journey-btn.show { display: block; }
+
+        .main-container {
+            position: absolute;
+            top: 64px; left: 0; right: 0; bottom: 0;
+        }
+
+        /* 时间轴控件 */
+        .timeline-bar {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 950;
+            background: rgba(255,254,249,0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #e8dcc8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(4px);
+        }
+        .timeline-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #7a0000;
+            white-space: nowrap;
+        }
+        .timeline-slider {
+            width: 300px;
+            accent-color: #7a0000;
+        }
+        .timeline-date {
+            font-size: 13px;
+            color: #555;
+            min-width: 80px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* 图层切换 */
+        .layer-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 900;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid #ddd;
+        }
+        .layer-btn {
+            padding: 6px 12px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .layer-btn.active {
+            background: #7a0000;
+            color: white;
+        }
+
+        /* 地图图例 */
+        .map-legend {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            z-index: 900;
+            background: white;
+            border-radius: 6px;
+            padding: 10px 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+        .legend-title {
+            font-weight: bold;
+            color: #7a0000;
+            margin-bottom: 6px;
+            font-size: 13px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* 面板展开按钮（收起时显示） */
+        .panel-expand-btn {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            z-index: 899;
+            background: #7a0000;
+            color: white;
+            border: none;
+            padding: 10px 6px;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            display: none;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+            font-size: 14px;
+        }
+        .panel-expand-btn.show {
+            display: block;
+        }
+
+        /* 可拖动任务面板 */
+        .task-panel {
+            position: absolute;
+            top: 0; left: 0;
+            width: 360px;
+            height: 100%;
+            background: linear-gradient(180deg, #fffef9 0%, #faf6ed 100%);
+            border-right: 2px solid #e8dcc8;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.12);
+            z-index: 900;
+            border-radius: 0 0 12px 0;
+            user-select: none;
+            transition: opacity 0.3s ease;
+        }
+        .panel-header {
+            background: linear-gradient(135deg, #8e1b1b, #5a0000);
+            color: white;
+            padding: 14px 20px;
+            font-weight: bold;
+            font-size: 17px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+        }
+        .panel-toggle-btn {
+            cursor: pointer;
+            font-size: 18px;
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        .panel-toggle-btn:hover {
+            opacity: 1;
+        }
+        .task-progress { font-size: 13px; font-weight: normal; opacity: 0.95; }
+
+        .task-chapters {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+        }
+        .task-chapters::-webkit-scrollbar { width: 6px; }
+        .task-chapters::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+        }
+
+        .chapter { margin-bottom: 16px; }
+        .chapter-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #7a0000;
+            margin-bottom: 10px;
+            padding: 7px 10px;
+            border-left: 5px solid #d4af37;
+            background: linear-gradient(90deg, #fdf5e6, transparent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chapter-title:hover {
+            background: linear-gradient(90deg, #faecc8, transparent);
+        }
+        .chapter-title.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .chapter-badge {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: white;
+            color: #8e1b1b;
+            border: 1px solid #e8dcc8;
+        }
+        .chapter-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            max-height: 2000px;
+        }
+        .chapter-content.collapsed {
+            max-height: 0;
+        }
+
+        .task-item {
+            background: white;
+            border: 1px solid #e8dcc8;
+            border-radius: 8px;
+            padding: 11px 13px;
+            margin-bottom: 9px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            user-select: text;
+        }
+        .task-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 10px rgba(168,25,25,0.15);
+            border-color: #d4af37;
+        }
+        .task-item.locked {
+            opacity: 0.55;
+            cursor: not-allowed;
+            background: #f5f0e8;
+        }
+        .task-item.completed {
+            border-color: #228B22;
+            background: #f0f8f0;
+        }
+        .task-item.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 9px; right: 12px;
+            color: #228B22;
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        .task-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .task-name { font-weight: bold; color: #333; font-size: 14px; }
+        .task-star { color: #d4af37; font-size: 12px; font-weight: bold; }
+        .task-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 7px;
+        }
+        .task-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #fdf5e6;
+            color: #8e1b1b;
+            border: 1px solid #e8dcc8;
+        }
+
+        .action-area {
+            padding: 10px 14px;
+            border-top: 1px solid #e8dcc8;
+            background: #faf6ed;
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 7px;
+            background: white;
+            color: #7a0000;
+            border: 1px solid #d4af37;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            background: #7a0000;
+            color: white;
+        }
+        .reset-btn {
+            color: #666;
+            border-color: #ccc;
+        }
+        .reset-btn:hover {
+            background: #c33;
+            border-color: #c33;
+            color: white;
+        }
+
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* 底部状态栏 */
+        .footer-bar {
+            position: absolute;
+            bottom: 0; left: 360px; right: 0;
+            height: 52px;
+            background: rgba(255,254,249,0.95);
+            border-top: 1px solid #e8dcc8;
+            z-index: 950;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 20px;
+            backdrop-filter: blur(4px);
+        }
+        .medal-wall { display: flex; gap: 18px; }
+        .medal-item {
+            text-align: center;
+            opacity: 0.3;
+            transition: all 0.5s;
+            transform: scale(0.9);
+            cursor: pointer;
+        }
+        .medal-item.unlocked {
+            opacity: 1;
+            transform: scale(1);
+            animation: medalUnlock 0.6s ease-out;
+        }
+        .medal-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d4af37, #b8860b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 3px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            border: 2px solid #7a0000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .medal-item.unlocked .medal-icon {
+            box-shadow: 0 0 12px rgba(212,175,55,0.6);
+        }
+        .medal-name { font-size: 10px; color: #666; }
+
+        .footer-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .footer-btn {
+            padding: 5px 12px;
+            background: white;
+            border: 1px solid #d4af37;
+            border-radius: 15px;
+            color: #7a0000;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .footer-btn:hover {
+            background: #7a0000;
+            color: white;
+        }
+
+        /* ========== 3. 征程圆满结局 ========== */
+        #endScreen {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at top center, rgba(255,215,0,.12), transparent 28%),
+                linear-gradient(180deg, #4a0000 0%, #2b0000 48%, #100000 100%);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+            animation: fadeIn 0.8s ease;
+        }
+
+        #endScreen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        #endScreen.show { display: flex; }
+
+        .end-inner {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 520px;
+            text-align: center;
+        }
+
+        .end-badge-large {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #d4af37);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 30px rgba(255,215,0,.45);
+            animation: medalPulse 2s infinite ease-in-out;
+        }
+
+        .badge-number { font-size: 42px; }
+
+        .end-title-large {
+            font-size: 38px;
+            font-weight: 800;
+            margin: 0 0 8px;
+            letter-spacing: 6px;
+            color: #fffef9;
+            text-shadow: 0 0 14px rgba(255,215,0,.35);
+            font-family: "思源宋体", "SimHei", serif;
+        }
+
+        .end-subtitle-large {
+            font-size: 16px;
+            color: #ffd700;
+            letter-spacing: 3px;
+            margin-bottom: 28px;
+        }
+
+        .end-stats-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            background: rgba(255,255,255,.045);
+            border: 1px solid rgba(212,175,55,.22);
+            border-radius: 12px;
+            padding: 22px 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-block { text-align: center; }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 800;
+            color: #ffd700;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,.75);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 50px;
+            background: linear-gradient(180deg, transparent, rgba(212,175,55,.35), transparent);
+        }
+
+        .spirit-graph-card {
+            background: rgba(255,255,255,.045);
+            border: 1px solid rgba(212,175,55,.22);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+        }
+
+        .spirit-card-title {
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 16px;
+        }
+
+        .spirit-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .spirit-name {
+            width: 90px;
+            font-size: 13px;
+            color: rgba(255,255,255,.8);
+        }
+
+        .spirit-bar-wrap {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,.18);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .spirit-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #ffd700);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .spirit-percent {
+            width: 45px;
+            text-align: right;
+            font-size: 13px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .end-buttons-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .end-btn-primary,
+        .end-btn-secondary {
+            flex: 1;
+            height: 48px;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .3s ease;
+            letter-spacing: 1px;
+        }
+
+        .end-btn-primary {
+            background: linear-gradient(135deg, #ffd700, #d4af37);
+            color: #5a0000;
+            box-shadow: 0 6px 18px rgba(212,175,55,.35);
+        }
+
+        .end-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(212,175,55,.45);
+        }
+
+        .end-btn-secondary {
+            background: rgba(255,255,255,.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,.22);
+        }
+
+        .end-btn-secondary:hover {
+            background: rgba(255,255,255,.14);
+        }
+
+        /* ========== 任务弹窗 ========== */
+        .task-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .task-modal.active { display: flex; animation: fadeIn 0.3s ease; }
+        .modal-box {
+            background: #fffef9;
+            width: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e8dcc8;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: scaleIn 0.3s ease;
+        }
+        .modal-title {
+            background: linear-gradient(135deg, #8e1b1b, #5a0000);
+            color: white;
+            padding: 13px 20px;
+            font-weight: bold;
+            font-size: 17px;
+            border-bottom: 2px solid #d4af37;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close { cursor: pointer; font-size: 22px; line-height: 1; }
+        .modal-body { padding: 18px; }
+
+        .modal-desc {
+            line-height: 1.7;
+            color: #444;
+            margin-bottom: 14px;
+            padding: 11px;
+            background: #fdf5e6;
+            border-radius: 6px;
+            border-left: 4px solid #d4af37;
+            font-size: 14px;
+        }
+
+        .spirit-box {
+            background: linear-gradient(135deg, #fff8e1, #fffef9);
+            border: 1px solid #ffd700;
+            border-radius: 8px;
+            padding: 11px 13px;
+            margin-bottom: 14px;
+        }
+        .spirit-title {
+            font-weight: bold;
+            color: #a86c00;
+            margin-bottom: 5px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .spirit-text {
+            color: #665000;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .modal-target { margin-bottom: 14px; }
+        .target-title { font-weight: bold; color: #7a0000; margin-bottom: 7px; font-size: 14px; }
+        .target-list { list-style: none; }
+        .target-list li {
+            padding: 4px 0;
+            padding-left: 22px;
+            position: relative;
+            color: #555;
+            font-size: 13px;
+        }
+        .target-list li::before { content: "☆"; position: absolute; left: 0; color: #d4af37; }
+        .target-list li.done::before { content: "★"; color: #228B22; }
+
+        .reward-box {
+            background: #fff8e1;
+            border: 1px solid #ffd700;
+            border-radius: 6px;
+            padding: 9px 13px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .reward-text { font-weight: bold; color: #a86c00; font-size: 14px; }
+        .reward-star { color: #d4af37; font-weight: bold; font-size: 17px; }
+
+        .btn-group { display: flex; gap: 12px; }
+        .btn {
+            flex: 1;
+            padding: 9px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8e1b1b, #5a0000);
+            color: white;
+            box-shadow: 0 2px 6px rgba(122,0,0,0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7a0000, #4a0000);
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #228B22, #196619);
+            color: white;
+            box-shadow: 0 2px 6px rgba(34,139,34,0.3);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #196619, #0f4d0f);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #f0ebe0;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        .btn-secondary:hover { background: #e8e3d8; }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .dialog-box {
+            background: #f8f4eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #e8dcc8;
+        }
+        .dialog-item { margin-bottom: 9px; }
+        .dialog-item.npc .dialog-text {
+            background: white;
+            border: 1px solid #e8dcc8;
+            border-radius: 0 8px 8px 8px;
+        }
+        .dialog-item.user .dialog-text {
+            background: linear-gradient(135deg, #8e1b1b, #5a0000);
+            color: white;
+            border-radius: 8px 0 8px 8px;
+            margin-left: auto;
+        }
+        .dialog-text {
+            display: inline-block;
+            padding: 7px 11px;
+            max-width: 80%;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        .dialog-input-area { display: flex; gap: 8px; margin-bottom: 12px; }
+        .dialog-input {
+            flex: 1;
+            padding: 7px 9px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .voice-btn {
+            padding: 7px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .voice-btn:hover { background: #f5f5f5; }
+
+        .upload-area {
+            border: 2px dashed #d4af37;
+            border-radius: 8px;
+            padding: 26px;
+            text-align: center;
+            color: #888;
+            background: #fdfaf3;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #8e1b1b;
+            background: #fff8e8;
+        }
+        .form-item { margin-bottom: 11px; }
+        .form-item label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #555;
+            font-size: 13px;
+        }
+        .form-item textarea {
+            width: 100%;
+            padding: 7px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .site-label {
+            background: transparent;
+            padding: 0;
+            border: none;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            white-space: nowrap;
+            box-shadow: none;
+            text-shadow:
+                -1.5px -1.5px 0 #000,
+                 1.5px -1.5px 0 #000,
+                -1.5px  1.5px 0 #000,
+                 1.5px  1.5px 0 #000;
+        }
+
+        .tip-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 9px;
+            line-height: 1.5;
+        }
+
+        /* 确认弹窗 */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 15000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .confirm-modal.active { display: flex; }
+        .confirm-box {
+            background: #fffef9;
+            width: 380px;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: scaleIn 0.3s ease;
+        }
+        .confirm-header {
+            background: linear-gradient(135deg, #8e1b1b, #5a0000);
+            color: white;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 2px solid #d4af37;
+        }
+        .confirm-body {
+            padding: 20px;
+            text-align: center;
+            line-height: 1.8;
+            color: #444;
+        }
+        .confirm-btns {
+            display: flex;
+            gap: 15px;
+            padding: 0 20px 20px;
+        }
+
+        /* 章节过渡弹窗 */
+        .chapter-transition-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 12000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.6s ease;
+        }
+        .chapter-transition-modal.active { display: flex; }
+        .transition-box {
+            text-align: center;
+            color: white;
+            width: 90%;
+            max-width: 480px;
+            position: relative;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .transition-chapter-badge {
+            font-size: 14px;
+            letter-spacing: 4px;
+            color: #ffd700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .transition-chapter-title {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            margin-bottom: 8px;
+            font-family: "思源宋体", serif;
+            text-shadow: 0 0 20px rgba(255,215,0,.4);
+        }
+        .transition-divider {
+            width: 120px;
+            height: 2px;
+            margin: 0 auto 24px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+        }
+        .transition-desc {
+            font-size: 15px;
+            line-height: 1.8;
+            color: rgba(255,255,255,.85);
+            margin-bottom: 28px;
+        }
+        .transition-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(212,175,55,.25);
+            border-radius: 12px;
+            padding: 18px 12px;
+            margin-bottom: 28px;
+            backdrop-filter: blur(10px);
+        }
+        .transition-stat-item {
+            text-align: center;
+        }
+        .transition-stat-num {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+        .transition-stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,.7);
+        }
+        .transition-next-btn {
+            width: 100%;
+            height: 52px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ffd700, #d4af37);
+            color: #5a0000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 24px rgba(212,175,55,.4);
+            transition: all 0.3s ease;
+        }
+        .transition-next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(212,175,55,.5);
+        }
+        .transition-tip {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,.5);
+        }
+
+        /* 全局Toast提示 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(90,0,0,0.95);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: 1px solid #d4af37;
+            z-index: 20000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from {
+                transform: scale(.92);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes medalUnlock {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes medalPulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(255,215,0,.45); }
+            50% { box-shadow: 0 0 45px rgba(255,215,0,.65); }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(212,175,55,0); }
+        }
+        @keyframes siteGlow {
+            0% { filter: drop-shadow(0 0 4px #ffd700); }
+            50% { filter: drop-shadow(0 0 12px #ffd700); }
+            100% { filter: drop-shadow(0 0 4px #ffd700); }
+        }
+
+        @media (max-width: 1024px) {
+            .task-panel { width: 300px; }
+            .footer-bar { left: 300px; }
+            .modal-box { width: 90%; }
+            .timeline-slider { width: 200px; }
+        }
+
+        @media (max-width: 640px) {
+            .start-main-title {
+                font-size: 32px;
+                letter-spacing: 4px;
+            }
+            .start-card-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .end-title-large {
+                font-size: 30px;
+                letter-spacing: 4px;
+            }
+            .end-stats-card {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .stat-divider {
+                width: 50px;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(212,175,55,.35), transparent);
+            }
+            .end-buttons-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 全局水印 -->
+    <div class="watermark">湖南文理学院研学小组</div>
+
+    <!-- 全局Toast提示 -->
+    <div class="toast" id="globalToast"></div>
+
+    <!-- ========== 1. 启动封面 ========== -->
+    <div id="startScreen">
+        <div class="start-inner">
+            <div class="start-top">
+                <div class="start-badge-icon">🚩</div>
+                <div class="start-subtitle-line">红二·六军团常德革命足迹</div>
+            </div>
+
+            <h1 class="start-main-title">
+                长征任务链
+            </h1>
+
+            <div class="start-divider"></div>
+
+            <p class="start-lead">
+                重走一段转战之路<br>
+                寻访一处处红色遗址<br>
+                读懂一代青年的信仰与初心
+            </p>
+
+            <div class="start-card">
+                <div class="start-card-title">常德红色地图 · 互动研学</div>
+                <div class="start-card-info">
+                    <span>📍 46处历史节点</span>
+                    <span>🕒 1934—1935</span>
+                    <span>★ 任务式探索</span>
+                </div>
+            </div>
+
+            <button class="start-btn-large" onclick="startGame()">
+                <span class="btn-text">开启征程</span>
+                <span class="btn-arrow">→</span>
+            </button>
+
+            <p class="start-tip-small">
+                完成所有任务后，可手动结束征程，生成专属传承证书
+            </p>
+            <p class="clear-progress-tip" onclick="clearLocalProgress()">
+                📌 现场演示：点击清除本地进度
+            </p>
+        </div>
+    </div>
+
+    <!-- ========== 2. 游戏主界面 ========== -->
+    <div id="gameScreen">
+        <div class="header">
+            <h1>🚩 长征任务链 · 红二六军团常德足迹</h1>
+            <div class="header-right">
+                <button class="icon-btn" title="项目简介" onclick="showProjectIntro()">ℹ️</button>
+                <div class="header-score">
+                    <span class="star-icon">★</span>
+                    <span class="score-num" id="totalScore">0</span>
+                    <span style="font-size:12px;margin-left:3px;">红星</span>
+                </div>
+                <button class="end-journey-btn" id="endJourneyBtn" onclick="confirmEndJourney()">结束征程</button>
+                <button class="icon-btn" title="成果概览" onclick="showOverview()">📊</button>
+                <button class="icon-btn" title="全屏" onclick="toggleFullscreen()">⛶</button>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <!-- 面板展开按钮 -->
+            <button class="panel-expand-btn" id="panelExpandBtn" onclick="togglePanel()">📜</button>
+
+            <!-- 可拖动任务面板 -->
+            <div class="task-panel" id="taskPanel">
+                <div class="panel-header" id="panelHeader">
+                    <span style="display:flex;align-items:center;">
+                        <span class="panel-toggle-btn" onclick="togglePanel()" title="收起面板">«</span>
+                        <span>📜 任务手册</span>
+                    </span>
+                    <span class="task-progress" id="taskProgress">0/12 任务</span>
+                </div>
+                <div class="task-chapters" id="taskList"></div>
+                <div class="action-area">
+                    <button class="action-btn" onclick="toggleDemoMode()">🎬 演示模式</button>
+                    <button class="action-btn reset-btn" onclick="resetGame()">🔄 重置</button>
+                </div>
+            </div>
+
+            <!-- 图层切换 -->
+            <div class="layer-switch">
+                <button class="layer-btn active" onclick="switchLayer('satellite')">卫星图</button>
+                <button class="layer-btn" onclick="switchLayer('standard')">标准图</button>
+            </div>
+
+            <!-- 地图图例 -->
+            <div class="map-legend">
+                <div class="legend-title">图例</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#8B008B;"></span><span>会师旧址</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FFD700;"></span><span>战斗遗址</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#228B22;"></span><span>政权旧址</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FF8C00;"></span><span>行军途经地</span></div>
+            </div>
+
+            <!-- 时间轴 -->
+            <div class="timeline-bar">
+                <span class="timeline-label">🕐 时间轴</span>
+                <input type="range" class="timeline-slider" id="timelineSlider" min="0" max="46" value="46" oninput="updateTimeline(this.value)">
+                <span class="timeline-date" id="timelineDate">1935年12月</span>
+            </div>
+
+            <div id="map"></div>
+        </div>
+
+        <div class="footer-bar">
+            <div class="medal-wall">
+                <div class="medal-item" id="medal1" onclick="showSpiritGraph()">
+                    <div class="medal-icon">学</div>
+                    <div class="medal-name">红星学员</div>
+                </div>
+                <div class="medal-item" id="medal2" onclick="showSpiritGraph()">
+                    <div class="medal-icon">传</div>
+                    <div class="medal-name">长征传人</div>
+                </div>
+                <div class="medal-item" id="medal3" onclick="showSpiritGraph()">
+                    <div class="medal-icon">使</div>
+                    <div class="medal-name">红色使者</div>
+                </div>
+                <div class="medal-item" id="medal4" onclick="showSpiritGraph()">
+                    <div class="medal-icon">承</div>
+                    <div class="medal-name">薪火传承者</div>
+                </div>
+            </div>
+            <div class="footer-right">
+                <span>已覆盖 <span style="color:#7a0000;font-weight:bold;" id="siteCount">0</span> 处遗址</span>
+                <span>已解锁 <span style="color:#7a0000;font-weight:bold;" id="medalCount">0</span> 枚勋章</span>
+                <button class="footer-btn" onclick="showSpiritGraph()">🧭 精神图谱</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目简介弹窗 -->
+    <div class="task-modal" id="introModal">
+        <div class="modal-box" style="width:520px;">
+            <div class="modal-title">
+                <span>ℹ️ 项目简介</span>
+                <span class="modal-close" onclick="closeIntro()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-desc">
+                    <b>项目背景：</b>1934-1935年，红二、六军团征战常德，开辟湘鄂川黔革命根据地，策应中央红军长征，是长征精神早期孕育的重要场域。
+                </div>
+                <div class="spirit-box">
+                    <div class="spirit-title">🎯 产品定位</div>
+                    <div class="spirit-text">
+                        互动式红色研学工具，针对青年群体“知宏观、轻本土”“有认同、弱共情”的痛点，打造「认知-共情-共建-践行」完整思政育人闭环。
+                    </div>
+                </div>
+                <div class="modal-target">
+                    <div class="target-title">📦 四大核心模块</div>
+                    <ul class="target-list">
+                        <li class="done"><b>地图寻迹：</b>46处常德本土革命遗址，时间轴动态还原行军路线</li>
+                        <li class="done"><b>数字人对话：</b>AI数字人「冬生」跨越时空对话，沉浸式感受历史</li>
+                        <li class="done"><b>史料众筹：</b>全民参与红色记忆保护，共建常德红色记忆库</li>
+                        <li class="done"><b>实践闭环：</b>线上任务+线下践行，精神图谱量化成长</li>
+                    </ul>
+                </div>
+                <div class="tip-text">
+                    应用场景：中学研学实践、高校思政课堂、地方党史馆数字化展陈<br>
+                    本项目为新文科实践创新成果，框架可复用、可迁移
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 3. 任务弹窗 ========== -->
+    <div class="task-modal" id="taskModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span id="modalTaskName">任务名称</span>
+                <span class="modal-close" onclick="closeModal()">×</span>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 成果概览弹窗 -->
+    <div class="task-modal" id="overviewModal">
+        <div class="modal-box" style="width:400px;">
+            <div class="modal-title">
+                <span>📊 传承成果概览</span>
+                <span class="modal-close" onclick="closeOverview()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="overview-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #e8dcc8;">
+                    <span style="color:#666;">完成任务数</span>
+                    <span style="font-weight:bold;color:#7a0000;font-size:16px;" id="ovTasks">0 / 12</span>
+                </div>
+                <div class="overview-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #e8dcc8;">
+                    <span style="color:#666;">覆盖革命遗址</span>
+                    <span style="font-weight:bold;color:#7a0000;font-size:16px;" id="ovSites">0 处</span>
+                </div>
+                <div class="overview-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #e8dcc8;">
+                    <span style="color:#666;">累计获得红星</span>
+                    <span style="font-weight:bold;color:#7a0000;font-size:16px;" id="ovScore">0 颗</span>
+                </div>
+                <div class="overview-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #e8dcc8;">
+                    <span style="color:#666;">解锁勋章</span>
+                    <span style="font-weight:bold;color:#7a0000;font-size:16px;" id="ovMedals">0 / 4 枚</span>
+                </div>
+                <div class="overview-item" style="display:flex;justify-content:space-between;padding:10px 0;">
+                    <span style="color:#666;">任务完成率</span>
+                    <span style="font-weight:bold;color:#7a0000;font-size:16px;" id="ovRate">0%</span>
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn btn-primary" style="width:100%;" onclick="closeOverview()">继续征程</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 精神图谱弹窗 -->
+    <div class="task-modal" id="spiritModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>🧭 长征精神图谱</span>
+                <span class="modal-close" onclick="closeSpiritModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="spirit-bar">
+                    <div class="spirit-bar-name"><span>坚定信念</span><span id="spirit1">0%</span></div>
+                    <div class="spirit-bar-bg"><div class="spirit-bar-fill" id="spirit1Fill" style="width:0%"></div></div>
+                </div>
+                <div class="spirit-bar">
+                    <div class="spirit-bar-name"><span>不畏艰险</span><span id="spirit2">0%</span></div>
+                    <div class="spirit-bar-bg"><div class="spirit-bar-fill" id="spirit2Fill" style="width:0%"></div></div>
+                </div>
+                <div class="spirit-bar">
+                    <div class="spirit-bar-name"><span>实事求是</span><span id="spirit3">0%</span></div>
+                    <div class="spirit-bar-bg"><div class="spirit-bar-fill" id="spirit3Fill" style="width:0%"></div></div>
+                </div>
+                <div class="spirit-bar">
+                    <div class="spirit-bar-name"><span>纪律严明</span><span id="spirit4">0%</span></div>
+                    <div class="spirit-bar-bg"><div class="spirit-bar-fill" id="spirit4Fill" style="width:0%"></div></div>
+                </div>
+                <div class="spirit-bar">
+                    <div class="spirit-bar-name"><span>军民同心</span><span id="spirit5">0%</span></div>
+                    <div class="spirit-bar-bg"><div class="spirit-bar-fill" id="spirit5Fill" style="width:0%"></div></div>
+                </div>
+                <div class="tip-text" style="margin-top:15px;">
+                    💡 完成对应任务解锁精神维度<br>全部解锁后可生成专属传承证书
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 章节通关过渡弹窗 -->
+    <div class="chapter-transition-modal" id="chapterTransitionModal">
+        <div class="transition-box">
+            <div class="transition-chapter-badge" id="transitionBadge">第一章完成</div>
+            <h2 class="transition-chapter-title" id="transitionTitle">寻迹常德</h2>
+            <div class="transition-divider"></div>
+            <p class="transition-desc" id="transitionDesc">
+                你已走完红二六军团的入常征战之路<br>
+                在地图上点亮了常德境内的革命足迹
+            </p>
+            <div class="transition-stats">
+                <div class="transition-stat-item">
+                    <div class="transition-stat-num" id="transitionTasks">5</div>
+                    <div class="transition-stat-label">完成任务</div>
+                </div>
+                <div class="transition-stat-item">
+                    <div class="transition-stat-num" id="transitionStars">70</div>
+                    <div class="transition-stat-label">获得红星</div>
+                </div>
+                <div class="transition-stat-item">
+                    <div class="transition-stat-num" id="transitionSites">5</div>
+                    <div class="transition-stat-label">覆盖遗址</div>
+                </div>
+            </div>
+            <button class="transition-next-btn" onclick="goToNextChapter()">
+                进入下一章 →
+            </button>
+            <p class="transition-tip">点击进入，开启下一阶段的长征之旅</p>
+        </div>
+    </div>
+
+    <!-- 结束征程确认弹窗 -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-box">
+            <div class="confirm-header">⚠️ 确认结束征程？</div>
+            <div class="confirm-body">
+                你已完成全部长征任务，是否结束当前征程？<br>
+                结束后将生成你的专属传承证书与精神图谱。
+            </div>
+            <div class="confirm-btns">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeConfirm()">继续探索</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="endJourney()">确认结束</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 4. 征程圆满结局 ========== -->
+    <div id="endScreen">
+        <div class="end-inner">
+            <div class="end-badge-large">
+                <span class="badge-number">🏆</span>
+            </div>
+
+            <h2 class="end-title-large">征程圆满</h2>
+            <p class="end-subtitle-large">长征精神 薪火相传</p>
+
+            <div class="end-stats-card">
+                <div class="stat-block">
+                    <div class="stat-number" id="endTasks">12</div>
+                    <div class="stat-label">完成任务</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-block">
+                    <div class="stat-number" id="endScore">0</div>
+                    <div class="stat-label">获得红星</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-block">
+                    <div class="stat-number" id="endSites">0</div>
+                    <div class="stat-label">覆盖遗址</div>
+                </div>
+            </div>
+
+            <div class="spirit-graph-card">
+                <div class="spirit-card-title">🌟 你的长征精神图谱</div>
+
+                <div class="spirit-row">
+                    <span class="spirit-name">坚定信念</span>
+                    <div class="spirit-bar-wrap">
+                        <div class="spirit-bar-fill" id="endSpirit1Fill" style="width:0%"></div>
+                    </div>
+                    <span class="spirit-percent" id="endSpirit1">0%</span>
+                </div>
+
+                <div class="spirit-row">
+                    <span class="spirit-name">不畏艰险</span>
+                    <div class="spirit-bar-wrap">
+                        <div class="spirit-bar-fill" id="endSpirit2Fill" style="width:0%"></div>
+                    </div>
+                    <span class="spirit-percent" id="endSpirit2">0%</span>
+                </div>
+
+                <div class="spirit-row">
+                    <span class="spirit-name">实事求是</span>
+                    <div class="spirit-bar-wrap">
+                        <div class="spirit-bar-fill" id="endSpirit3Fill" style="width:0%"></div>
+                    </div>
+                    <span class="spirit-percent" id="endSpirit3">0%</span>
+                </div>
+
+                <div class="spirit-row">
+                    <span class="spirit-name">纪律严明</span>
+                    <div class="spirit-bar-wrap">
+                        <div class="spirit-bar-fill" id="endSpirit4Fill" style="width:0%"></div>
+                    </div>
+                    <span class="spirit-percent" id="endSpirit4">0%</span>
+                </div>
+
+                <div class="spirit-row">
+                    <span class="spirit-name">军民同心</span>
+                    <div class="spirit-bar-wrap">
+                        <div class="spirit-bar-fill" id="endSpirit5Fill" style="width:0%"></div>
+                    </div>
+                    <span class="spirit-percent" id="endSpirit5">0%</span>
+                </div>
+            </div>
+
+            <div class="end-buttons-row">
+                <button class="end-btn-secondary" onclick="restartGame()">
+                    重走长征路
+                </button>
+                <button class="end-btn-primary" onclick="generateCertificate()">
+                    生成传承证书
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 对话关键词库（全年龄段覆盖） ==========
+        const dialogKeywords = [
+            // 精准长关键词（最高优先级）
+            {keywords: ["浯溪河","奔袭","七十里","70里"], reply:"嗨，那仗打得才叫过瘾！那天凌晨天还没亮，我们从佘家坪出发，翻山越岭急行军七十里地，草鞋都磨破了好几双。到浯溪河的时候敌人还在被窝里睡觉呢，我们两路夹击，打得他们晕头转向，第二天就进了桃源城！"},
+            {keywords: ["借锅","赔锅","铁锅","赔钱","一块银元"], reply:"这是真的！就在大水田村，我们借了段大娘一口铁锅做饭，走的时候炊事员不小心碰破了锅边。首长说，红军有纪律，损坏东西一定要赔，硬是塞给大娘一块银元。不拿群众一针一线，这是红军的本分。"},
+            {keywords: ["桐油灯","段自坤","段大娘","送灯"], reply:"你说那盏桐油灯吧？那是我们临走前送给段大娘的。那时候夜行军、晚上做饭都缺灯油，大娘省着自己的灯油给我们用。我们临走就留了一盏桐油灯，说‘大娘，这灯给您，夜里照亮路’。这灯啊，照的是路，暖的是人心。"},
+            {keywords: ["贺龙","赠刀","马刀","大刀"], reply:"是真的！就在大水田，贺老总住在老乡家，老乡家儿子想参加红军又放心不下家里。贺老总就把自己的马刀送给老乡，说‘等革命胜利了，我再回来取刀’。那刀亮闪闪的，老乡家当传家宝一样传下来了。"},
+            {keywords: ["木黄会师","会师","红三军"], reply:"木黄会师可是大事！红六军团和红三军在贵州印江木黄胜利会师，红三军恢复红二军团番号，贺老总任军团长，任弼时任政委。从那以后，我们两大主力拧成一股绳，力量就大了！"},
+            {keywords: ["磨市整训","整训","誓词"], reply:"磨市整训是长征出发前最后一次大整训。全军集中整训，练打仗、练纪律，任弼时政委还编撰了红军誓词。那时候大家都知道，要准备走远路了，个个都攒着劲。"},
+
+            // 战斗军事类
+            {keywords: ["打仗","战斗","战役","打"], reply:"打仗哪有不苦的，但我们不怕！贺老总常说，怎么对革命有利就怎么打。该冲的时候敢冲，该撤的时候会撤，灵活得很。跟着贺老总打仗，心里踏实！"},
+            {keywords: ["赢了","胜利","打赢"], reply:"当然赢了！我们在常德打了好多胜仗，浯溪河、十万坪、陬市，场场都提气！打完胜仗老百姓夹道欢迎，那场面，这辈子都忘不掉。"},
+            {keywords: ["害怕","怕不怕","怕死","恐惧"], reply:"说不怕是假的，子弹嗖嗖从耳边过，谁不怕？但一想到身后是老百姓，想到革命能胜利，就不怕了。冲上去的时候，脑子里只有一个念头：打赢！"},
+            {keywords: ["武器","枪","大炮","装备"], reply:"我们装备是差哦，好多战士还是土枪、大刀，子弹也少。但我们靠的是一股子劲，靠的是老百姓支持。装备差怕什么？敢打敢拼，照样打胜仗！"},
+            {keywords: ["受伤","流血","疼","伤员"], reply:"打仗哪有不受伤的。受伤了有卫生员包扎，轻伤不下火线，重伤就送到老乡家养着。这点伤算啥子，为了革命胜利，值得！"},
+            {keywords: ["敌人","国民党","罗启疆","守军"], reply:"敌人装备是好，人也多，但他们没我们能吃苦，没我们会打仗。罗启疆的旅怎么样？还不是在浯溪河被我们打垮了！"},
+            {keywords: ["跑","行军","走路","累","急行军"], reply:"走路算啥子哦！我们一天走个几十里是常事。浯溪河那次，一天奔袭七十里，跑赢了时间，就打赢了仗。走多了就习惯了，不累！"},
+            {keywords: ["晚上","夜袭","黑","看不见"], reply:"晚上打仗才好呢！敌人看不见我们，我们摸清楚他们的位置，悄悄摸上去，一打一个准。夜袭是我们的拿手好戏！"},
+            {keywords: ["下雨","雨天","路滑"], reply:"下雨算啥！下刀子都要走！浯溪河那次就是雨夜奔袭，路滑摔了又爬起来，正是因为下雨，敌人才没防备，我们才打得顺手。"},
+            {keywords: ["山","爬山","翻山","陡"], reply:"这一带山是多，翻了一座又一座。但我们红军就是靠脚底板走天下，再陡的山都能爬上去。山高，没有我们的志气高！"},
+            {keywords: ["打输","败仗","撤退"], reply:"正面硬打我们没输过！不过也有难打的时候，打得赢就打，打不赢就走，保存力量最重要。贺老总常说，怎么对革命有利就怎么来，这叫实事求是。"},
+            {keywords: ["多少人","兵力","人数"], reply:"我们人没敌人多，但我们会集中兵力，打歼灭战。每次都集中力量打敌人一股，一口一口吃掉他们。人少不怕，会打仗就行！"},
+            {keywords: ["战术","打法","指挥","策略"], reply:"贺老总指挥得好！避实击虚、声东击西，打得敌人团团转。我们不是蛮干，靠脑子打仗，这叫战术。"},
+            {keywords: ["俘虏","抓俘虏"], reply:"俘虏了就优待，愿意参加红军的欢迎，愿意回家的给路费。我们红军不杀俘虏，这是规矩。"},
+            {keywords: ["站岗","放哨","执勤"], reply:"站岗是本分，一班站两个时辰，轮着来。困了就掐自己一把，绝不能误事。部队的安全，全靠岗哨呢。"},
+
+            // 人物领袖类
+            {keywords: ["贺龙","贺老总","贺军长"], reply:"贺老总啊！高高大大的，留着胡子，说话声音洪亮，还爱笑。一点架子都没有，经常跟我们小兵坐一起聊天。打仗的时候他在前面指挥，特别稳，只要看到他在，大家心里就踏实。"},
+            {keywords: ["萧克","萧克","萧军团长"], reply:"萧军团长是读书人，特别斯文，打仗特别会用脑子。他带的红六军团，走路快、打仗灵，人称‘飞兵’。我们都佩服他！"},
+            {keywords: ["任弼时","任政委"], reply:"任政委是文化人，管政治工作，特别讲道理。他给我们讲革命道理，大家都听得懂、都信服。部队的士气，靠的就是政委他们做工作。"},
+            {keywords: ["毛主席","毛泽东"], reply:"毛主席是我们的领袖！虽然我没亲眼见过，但我们都知道他带领中央红军在前面走，我们在这边牵制敌人，就是为了配合毛主席。跟着毛主席走，革命一定能胜利！"},
+            {keywords: ["多大","年龄","几岁"], reply:"我今年22岁，石门人，民国二十三年参的军。跟着队伍走了好多地方，打了好多胜仗！别看我年轻，我可是老战士了！"},
+            {keywords: ["哪里人","家","石门","老家"], reply:"我是石门人！家里还有爹妈和弟弟妹妹。参加红军就是为了让他们能过上好日子，让全天下的老百姓都能过上好日子。"},
+            {keywords: ["为什么当兵","参军","为什么当红军"], reply:"为什么当兵？为了穷人能翻身，为了不再受地主欺负，为了以后的孩子能读书、能吃饱饭。革命胜利了，大家就都好过了。"},
+            {keywords: ["女兵","女战士","女孩子"], reply:"有啊！宣传队、卫生队好多女同志，能吃苦得很，跟我们一样走路爬山，一样上前线救伤员。还有的女同志会打枪、会喊话，厉害得很！我们都佩服她们。"},
+            {keywords: ["班长","长官","当官","官"], reply:"我们红军官兵平等，当官的不欺负小兵。班长就是带头打仗、带头吃苦的。大家都是革命同志，没有高低贵贱。"},
+            {keywords: ["好朋友","战友"], reply:"有啊！部队里都是生死兄弟，一起打仗、一起吃苦，比亲兄弟还亲。我们相互照应，一个都不能落下。"},
+
+            // 生活日常类
+            {keywords: ["吃什么","饭","肉","吃的","伙食"], reply:"有啥吃啥。好的时候有糙米饭、红薯，不好的时候野菜、树皮也吃过。打了胜仗能吃上一顿肉，那就算过年了。不过我们不怕苦，我们吃的苦，是为了以后的人不用再吃苦。"},
+            {keywords: ["糖","零食","好吃的"], reply:"糖可少见哦！有时候老百姓会给我们塞块红薯糖，那甜到心里头。等革命胜利了，就天天都有糖吃了。"},
+            {keywords: ["睡觉","睡哪里","被子","住宿"], reply:"走到哪睡到哪。屋檐下、晒谷场、破庙里，都睡过。有时候有被子，有时候就盖点稻草。能躺着歇会儿就不错了，不讲究。"},
+            {keywords: ["冬天","冷","棉袄","衣服"], reply:"冬天是冷哦，好多人只有单衣、草鞋。但我们挤在一起取暖，活动活动身子就不冷了。心里有信念，就不觉得冷。"},
+            {keywords: ["草鞋","鞋","脚","磨破"], reply:"穿草鞋走路，磨破是常事，磨出茧子就好了。草鞋坏了就自己编，或者老百姓给我们编。能走路就行，不讲究。"},
+            {keywords: ["唱歌","歌","音乐"], reply:"会呀！我们经常唱《国际歌》、《红军歌》，行军的时候唱，休息的时候也唱。一唱歌，浑身就有劲，士气就上来了。"},
+            {keywords: ["想家","想爸妈","回家"], reply:"哪有不想家的。但革命没胜利，怎么能回家？等打败了敌人，建立了新中国，再风风光光回家看爹妈。"},
+            {keywords: ["生日","过生日"], reply:"部队里不过生日哦，大家都记不得这些。天天打仗，能活着就好，等革命胜利了，天天都像过生日。"},
+            {keywords: ["喝水","水","饮水"], reply:"山里有泉水，河里有水，舀起来就喝。有时候水少，就省着喝。这点苦算啥，为了革命，啥都能克服。"},
+            {keywords: ["时间","手表","几点"], reply:"我们没有手表，看太阳、看影子估计时间。行军听号声，起床听鸡叫。时间嘛，大概就行，不误打仗就中。"},
+            {keywords: ["读书","认字","上学","学校"], reply:"部队里有扫盲班，闲下来就学认字。好多人当兵前大字不识一个，现在都能读标语了。等革命胜利了，娃娃们都能上学堂！"},
+            {keywords: ["洗衣服","洗澡","卫生"], reply:"衣服脏了自己洗，有水就洗，没水就凑活。打仗的时候，哪顾得上这些。"},
+            {keywords: ["盐","吃盐"], reply:"盐金贵得很，省着吃。有时候老百姓会偷偷给我们送点盐。没盐没力气，但也能扛。"},
+            {keywords: ["病了","生病","医生","药"], reply:"生病了有卫生员，有草药，严重的就送到老乡家养着。那时候药金贵，但尽量给战士治。扛过去就好了，扛不过去……就为革命牺牲了。"},
+            {keywords: ["军饷","钱","工资","银元"], reply:"要啥军饷哦！我们当兵不是为了钱。有饭吃、有衣穿，为老百姓打天下，就够了。等革命胜利了，人人都过上好日子，比拿多少钱都强。"},
+            {keywords: ["军旗","旗子"], reply:"有啊！我们的军旗是红的，上面有五角星。行军的时候前面扛着旗，大家跟着旗走，旗在人在！"},
+            {keywords: ["吹号","起床号","号"], reply:"有司号员！起床、吃饭、行军、睡觉，都听号声。号声就是命令，一听见号声，马上动起来。"},
+
+            // 军民鱼水类
+            {keywords: ["老百姓","群众","人民"], reply:"老百姓是我们的根！没有老百姓支持，我们走不了这么远、打不了这么多胜仗。我们帮老百姓干活，老百姓给我们筹粮、带路、掩护伤员。军民一条心，就什么都不怕。"},
+            {keywords: ["害怕","躲着","怕红军"], reply:"一开始是有点怕，以前过兵都抢东西。可我们不一样，进村不敲门、不进堂屋，晚上就睡屋檐下，还帮老百姓挑水劈柴。没过两天，老百姓就晓得我们是好人的队伍了。"},
+            {keywords: ["挑水","劈柴","帮忙","干活"], reply:"这是应该的！红军就是为老百姓服务的。闲下来就帮老乡挑水、劈柴、扫地，做些力所能及的事。我们是人民的军队嘛。"},
+            {keywords: ["分田地","打土豪","分粮食"], reply:"是真的！打土豪，把地主的粮食、田地分给穷苦老百姓。老百姓苦了多少年了，终于有了自己的田，都拥护我们。"},
+            {keywords: ["参军","参加红军","报名"], reply:"好多年轻人报名参加红军！桃源、石门、澧县，到处都有年轻人跟着走。他们知道，跟着红军走，才有出路，才有好日子过。"},
+            {keywords: ["苏维埃","政府","政权"], reply:"苏维埃就是我们穷人自己的政府。建立了苏维埃，就分田地、减租减息，老百姓当家作主。桃源、石门都建了县苏维埃呢！"},
+            {keywords: ["掩护","伤员","养伤"], reply:"老百姓冒着生命危险掩护我们的伤员，把伤员藏在山洞里、地窖里，给换药、给送饭。这份恩情，我们一辈子都忘不了。"},
+            {keywords: ["故事","流传","传下来"], reply:"都是老百姓口耳相传传下来的。我们做的事，老百姓都看在眼里、记在心里。只要对老百姓好，他们就会永远记着你。"},
+            {keywords: ["宣传","革命道理","演讲"], reply:"我们走到哪就宣传到哪。开群众大会，讲革命道理，讲红军是为穷人打天下的队伍。老百姓听懂了，就拥护我们了。"},
+            {keywords: ["借东西","欠条","打条子"], reply:"借东西一定打条子，损坏了一定赔。这是红军的纪律。我们不能拿老百姓一针一线，这是规矩，坏了规矩，就不是红军了。"},
+            {keywords: ["段大娘","段奶奶"], reply:"段大娘是好人啊！给我们腾地方住，给我们做饭，省着灯油给我们用。我们临走留了桐油灯，她一直珍藏着。老百姓的心，就是最金贵的东西。"},
+            {keywords: ["孩子","小朋友","娃娃"], reply:"娃娃们一开始怕我们，后来就跟在我们屁股后面转。我们给他们讲革命故事，教他们认字。这些娃娃，就是革命的种子。"},
+
+            // 信仰初心类
+            {keywords: ["为什么打仗","革命","为什么"], reply:"为了穷人能翻身，为了建立新中国，为了以后的子子孙孙都能过上安稳日子。我们这辈人吃够了苦，就不想后辈再吃苦。"},
+            {keywords: ["长征","去哪里","走多久"], reply:"长征就是北上抗日，去和中央红军会合。路是远，苦是苦，但我们不怕！我们走的是光明路，走的是救国救民的路。"},
+            {keywords: ["不怕死","牺牲","值得吗"], reply:"怕，但更怕老百姓永远受欺负。为了革命胜利，为了后代能过上好日子，牺牲了也值得。我们死了，还有后来人，革命总会胜利的。"},
+            {keywords: ["信念","信仰","精神","支撑"], reply:"靠信仰啊！我们信共产党，信革命一定能胜利，信将来老百姓都能过上好日子。就靠着这股子信念，再苦再难都能扛过去。"},
+            {keywords: ["长征精神","精神是什么"], reply:"我一个小兵说不好大道理。我觉得就是：不怕苦、不怕死，听指挥、守纪律，心里装着老百姓。我们走一路，撒一路种子，到哪里都能生根发芽。"},
+            {keywords: ["纪律","三大纪律","规矩"], reply:"纪律就是我们的命根子！三大纪律八项注意，人人都要背。不拿群众一针一线，损坏东西要赔，打仗听指挥。纪律严，才能打胜仗，才能得民心。"},
+            {keywords: ["胜利","什么时候","成功"], reply:"快了！我们都相信，革命一定会胜利。哪怕我们看不到，后辈也能看到。为了胜利，我们付出多少都愿意。"},
+            {keywords: ["胜利了做什么","最想做什么"], reply:"胜利了啊，先回家看爹妈，然后好好种地，过安稳日子。还要看看新中国，是不是人人都有饭吃、有书读。要是那样，就太好了。"},
+            {keywords: ["共产党","党"], reply:"共产党是为穷人谋幸福的党。跟着共产党走，就有出路。我们红军，就是党领导的队伍。"},
+            {keywords: ["为什么叫红军","红色"], reply:"红军是工农的军队，红色是革命的颜色，是鲜血的颜色。我们戴着红五星，扛着红旗，所以叫红军。"},
+            {keywords: ["实事求是"], reply:"贺老总常说，怎么对斗争有利就怎么做。不盲从、不蛮干，从实际出发，这就是实事求是。打仗是这样，干革命也是这样。"},
+            {keywords: ["群众路线","依靠人民"], reply:"革命不是靠几个人就能成的。依靠老百姓，为了老百姓，这就是我们的根本。人民支持我们，我们就战无不胜。"},
+
+            // 时空对话类
+            {keywords: ["2026","现在","未来","新时代"], reply:"哇，2026年……那时候革命早就胜利了吧？老百姓都过上好日子了吗？是不是人人都有饭吃、有书读？要是真的，我们现在吃再多苦都值得。"},
+            {keywords: ["不用打仗了","和平","现在的生活"], reply:"真的不用打仗了？那太好了！我们拼命打仗，就是为了后代不用再打仗，能安安稳稳过日子。听到你这么说，我心里头暖得很。"},
+            {keywords: ["常德","现在的常德","发展"], reply:"现在的常德肯定很热闹吧？桃源城、石门县，肯定都变样了。等革命胜利了，我一定要回去看看，看看新社会的常德城。"},
+            {keywords: ["上学","读书","学生"], reply:"娃娃们都能上学读书？那太好了！我们那时候好多人连自己名字都不会写。你们要好好读书，长大了建设新中国，把国家建设得好好的。"},
+            {keywords: ["传承","传下去","记住","纪念"], reply:"只要你们还记得我们，还记得长征精神，我们就没白牺牲。把精神传下去，让后辈都知道好日子来之不易，要好好珍惜。"},
+            {keywords: ["想对年轻人说","寄语","说什么"], reply:"年轻人啊，要好好读书，好好做事，要爱国，要争气。别忘了今天的好日子来之不易，别忘了革命先辈的付出。把国家建设得更好，就是对我们最好的告慰。"},
+            {keywords: ["值得吗","牺牲值得吗"], reply:"值得！太值得了！能换来后代的好日子，能换来国家的强盛，我们这点牺牲算什么。看到你们现在过得好，我们就放心了。"},
+            {keywords: ["朋友","做朋友","认识你"], reply:"好啊！能认识你这个未来的朋友，我高兴得很。等革命胜利了，我就去找你玩，你带我看看新社会！"},
+            {keywords: ["AI","数字技术","数字化","电脑"], reply:"哇，听你说的这些好新鲜哦，我都没听过呢！用这些东西能把我们的故事保存下来，让更多人知道？那真是太好了！"},
+            {keywords: ["重来","再选一次","还当红军吗"], reply:"重来一百次，我还是选当红军。为了革命，为了老百姓，这条路我走得心甘情愿，一点不后悔。"},
+            {keywords: ["谢谢","感谢","辛苦了"], reply:"谢啥子哦，这都是我们该做的。只要老百姓能过上好日子，我们再苦再累都应该的。"},
+            {keywords: ["放心","我们会的","走好"], reply:"哎，好！有你们这句话，我们就放心了。后面的路，就靠你们了。好好走，把长征精神传下去，把国家建设好！"}
+        ];
+
+        // 脚本外兜底回复
+        const fallbackReplies = [
+            "哈哈，你说的啥子哦？我没太听清，你再说一遍好不好？",
+            "这个呀……我也不晓得嘞，我们那时候哪知道这些哦。",
+            "哇，听你说的这些好新鲜哦，我都没听过呢！等革命胜利了我也想去见识见识。",
+            "这个人我没听说过哦，我们部队人多，不是人人都认识的。",
+            "这件事我不太清楚嘞，我就是个小兵，好多事情也不是全部都知道。",
+            "哈哈，你问的这个有意思，我想想啊……嗯，我说不好，你就当故事听呗。"
+        ];
+
+        // 关键词匹配函数
+        function getReply(text) {
+            text = text.toLowerCase();
+            let maxHit = 0;
+            let bestReply = null;
+            
+            // 遍历关键词库，找命中数最多的
+            for (let item of dialogKeywords) {
+                let hitCount = 0;
+                for (let kw of item.keywords) {
+                    if (text.includes(kw)) {
+                        hitCount++;
+                    }
+                }
+                if (hitCount > maxHit) {
+                    maxHit = hitCount;
+                    bestReply = item.reply;
+                }
+            }
+            
+            // 命中至少1个关键词就返回对应回复
+            if (maxHit > 0) {
+                return bestReply;
+            }
+            
+            // 都没命中，随机返回兜底回复
+            return fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+        }
+
+        // ========== 30+处完整点位数据 ==========
+        const allSites = [
+            {id:1, name:"木黄会师旧址", location:[28.0512,108.7536], type:"meet", date:"1934年10月24日",
+            action:"红六军团与红三军在贵州印江县木黄胜利会师，红三军恢复红二军团番号。贺龙任军团长，任弼时任政治委员。",
+            significance:"红二方面军建军里程碑，结束红三军孤军游击困境。",
+            spirit:"坚定信念、服务大局的团结精神", spiritType:1},
+            {id:2, name:"永顺县城", location:[28.9234,109.8545], type:"pass", date:"1934年11月7日",
+            action:"红二、六军团联合攻占永顺县城，揭开湘西攻势序幕。",
+            significance:"会师后首次攻占县城，鼓舞红军士气。",
+            spirit:"不畏强敌、主动出击的战斗精神", spiritType:2},
+            {id:3, name:"十万坪大捷遗址", location:[28.9523,109.7845], type:"battle", date:"1934年11月16日",
+            action:"永顺十万坪伏击，歼敌2000余人、缴获枪械2200余支。",
+            significance:"彻底扭转湘西战局，扫清根据地外围障碍。",
+            spirit:"灵活机动、诱敌深入的战术智慧", spiritType:3},
+            {id:4, name:"大庸县城", location:[29.1234,110.4856], type:"base", date:"1934年12月1日",
+            action:"成立湘鄂川黔临时省委、省革委会与省军区，任弼时任书记。",
+            significance:"湘鄂川黔革命根据地正式建制落地。",
+            spirit:"建政为民、扎根地方的初心精神", spiritType:1},
+            {id:5, name:"慈利走马坪", location:[29.3212,110.5834], type:"pass", date:"1934年12月12日",
+            action:"红军主力在走马坪集结，准备向常德方向进军。",
+            significance:"常德战役的出发地。",
+            spirit:"纪律严明、整装待发的自律精神", spiritType:4},
+            {id:6, name:"慈利赵家峪", location:[29.3612,110.6834], type:"pass", date:"1934年12月13日",
+            action:"红军从大庸出发，经赵家峪向江垭方向前进。",
+            significance:"红军入常前的最后集结地。",
+            spirit:"不畏艰险、勇往直前的进军精神", spiritType:2},
+            {id:7, name:"慈利江垭", location:[29.4212,110.7834], type:"pass", date:"1934年12月14日",
+            action:"红军主力经江垭进入慈利县境。",
+            significance:"红军进入常德地区的重要通道。",
+            spirit:"披荆斩棘、开拓前进的探索精神", spiritType:2},
+            {id:8, name:"慈利国太桥", location:[29.3812,110.9234], type:"pass", date:"1934年12月14日",
+            action:"红军经国太桥向溪口方向推进。",
+            significance:"慈利境内重要行军节点。",
+            spirit:"紧密团结、协同并进的集体精神", spiritType:1},
+            {id:9, name:"慈利溪口战斗遗址", location:[29.2512,111.0523], type:"battle", date:"1934年12月15日",
+            action:"攻克溪口，撕开常德西线门户，红军主力踏入常德地界。",
+            significance:"常德战役正式拉开序幕。",
+            spirit:"英勇善战、冲锋在前的牺牲精神", spiritType:2},
+            {id:10, name:"桃源灰溪河", location:[29.0212,111.1234], type:"pass", date:"1934年12月16日",
+            action:"红军冒雨从大庸出发，经灰溪河进入桃源县境。",
+            significance:"红军进入桃源的第一个村镇。",
+            spirit:"不怕吃苦、雨夜兼程的坚韧精神", spiritType:2},
+            {id:11, name:"桃源洞溪河", location:[29.0012,111.1834], type:"pass", date:"1934年12月16日",
+            action:"红军经洞溪河向三阳港方向急行军。",
+            significance:"红军奔袭浯溪河的重要途经地。",
+            spirit:"争分夺秒、出奇制胜的战机意识", spiritType:3},
+            {id:12, name:"桃源大庄坪", location:[28.9812,111.2234], type:"pass", date:"1934年12月16日",
+            action:"红军经大庄坪继续向东南方向推进。",
+            significance:"红军奔袭路线上的重要村落。",
+            spirit:"连续作战、不怕疲劳的战斗精神", spiritType:2},
+            {id:13, name:"桃源汪家峪", location:[28.9612,111.2634], type:"pass", date:"1934年12月16日",
+            action:"红军经汪家峪向佘家坪方向前进。",
+            significance:"红军奔袭浯溪河的必经之路。",
+            spirit:"不畏险阻、一往无前的英雄气概", spiritType:2},
+            {id:14, name:"桃源丁家坪", location:[28.9412,111.2834], type:"pass", date:"1934年12月16日",
+            action:"红军经丁家坪抵达三阳港附近。",
+            significance:"红军夜宿前的最后途经点。",
+            spirit:"艰苦朴素、秋毫无犯的纪律精神", spiritType:4},
+            {id:15, name:"桃源梨树垭", location:[28.9212,111.3034], type:"pass", date:"1934年12月16日",
+            action:"红军翻越梨树垭，进入三阳港盆地。",
+            significance:"红军奔袭途中的重要山地隘口。",
+            spirit:"翻山越岭、攻坚克难的奋斗精神", spiritType:2},
+            {id:16, name:"桃源丁家坊", location:[28.9012,111.3234], type:"pass", date:"1934年12月16日",
+            action:"红军经丁家坊夜宿佘家坪、三阳港一带。",
+            significance:"红军浯溪河战斗前的集结地。",
+            spirit:"战前休整、蓄势待发的备战精神", spiritType:4},
+            {id:17, name:"桃源佘家坪", location:[28.8812,111.3434], type:"pass", date:"1934年12月16日",
+            action:"红军主力夜宿佘家坪，进行战前休整。",
+            significance:"浯溪河战斗的前沿阵地。",
+            spirit:"同仇敌忾、士气高昂的斗争精神", spiritType:2},
+            {id:18, name:"桃源三阳港", location:[28.9012,111.3634], type:"pass", date:"1934年12月16日",
+            action:"红军先头部队抵达三阳港，离浯溪河仅数公里。",
+            significance:"红军侦察敌情的重要据点。",
+            spirit:"胆大心细、缜密侦察的务实精神", spiritType:3},
+            {id:19, name:"桃源六斗坪", location:[28.9712,111.3134], type:"pass", date:"1934年12月17日",
+            action:"红军向六斗坪敌军阵地发起进攻。",
+            significance:"浯溪河战斗的主要战场之一。",
+            spirit:"英勇冲锋、不怕牺牲的英雄主义", spiritType:2},
+            {id:20, name:"桃源界山湾", location:[28.9612,111.3334], type:"pass", date:"1934年12月17日",
+            action:"红军攻占界山湾阵地，突破敌军防线。",
+            significance:"浯溪河战斗的关键突破点。",
+            spirit:"突破重围、敢打必胜的信心信念", spiritType:1},
+            {id:21, name:"浯溪河大捷遗址", location:[28.9876,111.3245], type:"battle", date:"1934年12月17日",
+            action:"雨夜奔袭50公里，全歼罗启疆旅1团2营、击溃1团，击溃常德外围主力。",
+            significance:"常德围城的决定性前置战斗，战略驰援中央长征。",
+            spirit:"不畏艰险、灵活应变的战斗精神", spiritType:2, spiritType2:3},
+            {id:22, name:"陬市战斗遗址", location:[29.1534,111.5212], type:"battle", date:"1934年12月17日",
+            action:"攻占陬市镇，歼灭守敌一个团，切断常德-桃源陆路交通。",
+            significance:"孤立常德主城外围据点。",
+            spirit:"分割包围、各个击破的战略智慧", spiritType:3},
+            {id:23, name:"河洑战斗遗址", location:[29.0823,111.5834], type:"battle", date:"1934年12月17日",
+            action:"抢占河洑山地制高点，歼敌一个营，兵临常德城西近郊。",
+            significance:"常德城失去西部天然屏障，陷入合围。",
+            spirit:"抢占先机、乘胜追击的进取精神", spiritType:2},
+            {id:24, name:"围攻常德城旧址", location:[29.0345,111.6823], type:"battle", date:"1934年12月17-19日",
+            action:"主力围困常德老城两昼夜，城内守军困守待援，湘省震动。",
+            significance:"湘西攻势作战顶峰，震动国民党华中统治区。",
+            spirit:"围城打援、牵制敌军的战略担当", spiritType:1},
+            {id:25, name:"桃源漆家河", location:[29.0012,111.3534], type:"pass", date:"1934年12月24日",
+            action:"红军撤离常德后，经漆家河向桃源县城转移。",
+            significance:"红军战略转移的重要节点。",
+            spirit:"灵活机动、知进知退的务实精神", spiritType:3},
+            {id:26, name:"桃源县苏维埃旧址", location:[28.9012,111.4734], type:"base", date:"1934年12月26日",
+            action:"进驻桃源县城，建立县级苏维埃，开展分田、扩红、筹粮工作。",
+            significance:"桃源全境划入湘鄂川黔苏区版图。",
+            spirit:"执政为民、建设苏区的初心使命", spiritType:1},
+            {id:27, name:"桃源理公港", location:[29.1212,111.1834], type:"pass", date:"1934年12月28日",
+            action:"红军一部在理公港开展群众工作。",
+            significance:"红军在桃源西北山区的重要活动地点。",
+            spirit:"深入群众、宣传革命的群众路线", spiritType:5},
+            {id:28, name:"桃源黄石战斗遗址", location:[29.3212,111.2834], type:"battle", date:"1934年12月30日",
+            action:"黄石阻击反扑国军，稳固桃源苏区北部防线。",
+            significance:"保障桃源苏维埃政权平稳运行。",
+            spirit:"坚守阵地、保卫政权的责任担当", spiritType:2},
+            {id:29, name:"临澧县城战斗遗址", location:[29.4512,111.6434], type:"battle", date:"1935年1月8日",
+            action:"攻克临澧县城，建立临时红色政权，拓展苏区东线。",
+            significance:"根据地延伸至澧水下游。",
+            spirit:"乘胜前进、拓展苏区的开拓精神", spiritType:2},
+            {id:30, name:"临澧合口", location:[29.5212,111.7234], type:"pass", date:"1935年1月10日",
+            action:"红军经合口向石门方向推进。",
+            significance:"临澧境内重要行军节点。",
+            spirit:"乘胜追击、一往无前的进军精神", spiritType:2},
+            {id:31, name:"石门新关", location:[29.5612,111.3234], type:"pass", date:"1935年1月11日",
+            action:"红军经新关向石门县城进攻。",
+            significance:"攻克石门县城的前沿阵地。",
+            spirit:"奋勇向前、势如破竹的战斗意志", spiritType:2},
+            {id:32, name:"石门县苏维埃旧址", location:[29.5912,111.3834], type:"base", date:"1935年1月12日",
+            action:"占领石门县城，全县过半地域建立乡村苏维埃。",
+            significance:"石门成为湘鄂川黔根据地北部支点。",
+            spirit:"建党建政、造福人民的执政理念", spiritType:1},
+            {id:33, name:"石门阳泉", location:[29.5212,111.2234], type:"pass", date:"1935年8月20日",
+            action:"红军主力从桑植出发，经阳泉进入石门县境。",
+            significance:"红军东进津澧的重要通道。",
+            spirit:"转战千里、灵活机动的战略思想", spiritType:3},
+            {id:34, name:"石门皂市", location:[29.5612,111.5234], type:"pass", date:"1935年8月22日",
+            action:"红军经皂市向临澧、津市方向推进。",
+            significance:"红军东进路线上的重要集镇。",
+            spirit:"步伐坚定、方向明确的前进意志", spiritType:2},
+            {id:35, name:"津市白衣", location:[29.5812,111.8234], type:"pass", date:"1935年8月24日",
+            action:"红军经白衣向津市市区进攻。",
+            significance:"攻克津市的重要途经地。",
+            spirit:"攻坚克难、连战连捷的战斗作风", spiritType:2},
+            {id:36, name:"津市红二军团指挥部", location:[29.6312,111.8734], type:"base", date:"1935年8月",
+            action:"贺龙设指挥部于津市益泰绸布庄，津市成为红军物资集散枢纽。",
+            significance:"湘鄂边红军后勤核心基地。",
+            spirit:"统筹保障、支援前线的后勤精神", spiritType:4},
+            {id:37, name:"澧县县城战斗遗址", location:[29.6412,111.7534], type:"battle", date:"1935年8月27日",
+            action:"攻克澧县，打通澧水沿线苏区连片。",
+            significance:"湘鄂川黔根据地达到全盛疆域。",
+            spirit:"连片发展、壮大力量的格局意识", spiritType:1},
+            {id:38, name:"澧县王家厂", location:[29.6812,111.4234], type:"pass", date:"1935年8月25日",
+            action:"红军一部占领王家厂，惩处恶霸，筹集物资。",
+            significance:"红军在澧县的重要活动地点。",
+            spirit:"打富济贫、为民除害的人民立场", spiritType:5},
+            {id:39, name:"澧县大堰垱", location:[29.6612,111.5834], type:"pass", date:"1935年8月26日",
+            action:"红军经大堰垱向澧县县城进攻。",
+            significance:"红军攻克澧县的重要途经地。",
+            spirit:"步步为营、稳扎稳打的战斗风格", spiritType:2},
+            {id:40, name:"澧县梦溪", location:[29.7212,111.6234], type:"pass", date:"1935年8月28日",
+            action:"红军一部在梦溪开展游击活动。",
+            significance:"红军在澧县东北部的重要活动地点。",
+            spirit:"发动群众、游击作战的斗争策略", spiritType:5},
+            {id:41, name:"津市太青山", location:[29.7212,111.7234], type:"pass", date:"1935年9月13日",
+            action:"红军撤离津市后，经太青山向石门皂市转移。",
+            significance:"红军战略转移的重要山地通道。",
+            spirit:"灵活转战、保存力量的战略智慧", spiritType:3},
+            {id:42, name:"石门仙阳", location:[29.6212,111.2234], type:"pass", date:"1935年9月12日",
+            action:"红军经仙阳向皂市集结。",
+            significance:"红军转移途中的重要村落。",
+            spirit:"有序转移、步调一致的纪律精神", spiritType:4},
+            {id:43, name:"石门磨岗隘", location:[29.4212,111.0234], type:"pass", date:"1935年9月10日",
+            action:"红军撤离津澧后，经磨岗隘向磨市方向转移。",
+            significance:"红军战略转移的重要节点。",
+            spirit:"战略收缩、准备长征的远见卓识", spiritType:3},
+            {id:44, name:"石门磨市整训旧址", location:[29.4812,111.1234], type:"base", date:"1935年9-11月",
+            action:"全军磨市集中整训，任弼时编撰红军誓词，完成长征备战。",
+            significance:"红二六军团长征前最后整训地。",
+            spirit:"严守纪律、整装待发的自律精神", spiritType:4},
+            {id:45, name:"刘家坪长征始发地", location:[29.3812,110.1534], type:"meet", date:"1935年11月19日",
+            action:"红二六军团主力从刘家坪启程，开启红二方面军长征。",
+            significance:"红二方面军正式踏上长征之路。",
+            spirit:"毅然出发、不怕牺牲的长征精神", spiritType:1, spiritType2:2},
+            {id:46, name:"大水田村红军长征纪念地", location:[28.4734,111.0271], type:"pass", date:"1935年12月5-8日",
+            action:"红二、六军团长征途中取道大水田，在此休整3天，宣传革命道理，得到群众大力支持。留下借锅赔锅、贺龙赠刀、赠送桐油灯等佳话。",
+            significance:"常德市唯一的红军长征途经地。",
+            spirit:"军民同心、鱼水情深的群众精神", spiritType:5}
+        ];
+
+        // ========== 四级任务体系 ==========
+        const taskChapters = [
+            {
+                id:1, name:"第一章 · 寻迹常德", badge:"地图探索",
+                desc:"你已走完红二六军团的入常征战之路，在地图上点亮了常德境内的革命足迹。",
+                nextDesc:"接下来，让我们走进红军战士的故事，跨越时空与他们对话……",
+                center:[29.0, 111.35], zoom:10,
+                tasks:[
+                    {id:101, name:"寻访木黄会师旧址", desc:"在卫星地图上找到红二六军团会师地，查看建军历史。", star:10, type:"map", siteId:1,
+                        targets:["找到木黄会师旧址点位","查看点位历史详情"],
+                        spirit:"两军会师，凝聚革命力量，彰显了团结协作、服从大局的长征精神内核。", spiritType:1},
+                    {id:102, name:"探秘浯溪河大捷战场", desc:"定位浯溪河战斗遗址，复盘经典夜袭战例。", star:15, type:"map", siteId:21,
+                        targets:["定位浯溪河大捷遗址","阅读红军战斗经过"],
+                        spirit:"雨夜奔袭、灵活制敌，展现了红军不畏艰险、实事求是的战术智慧。", spiritType:2, spiritType2:3},
+                    {id:103, name:"寻访桃源苏维埃旧址", desc:"查看桃源县级苏维埃政权建立历程。", star:10, type:"map", siteId:26,
+                        targets:["找到桃源县苏维埃旧址","了解苏维埃建设事迹"],
+                        spirit:"建立人民政权、为群众谋利益，是红色政权扎根地方的生动实践。", spiritType:1},
+                    {id:104, name:"探访石门磨市整训地", desc:"了解红军长征前的整训备战历史。", star:15, type:"map", siteId:44,
+                        targets:["定位磨市整训旧址","学习红军整训历史"],
+                        spirit:"严明纪律、整军备战，为长征胜利奠定了坚实的组织与纪律基础。", spiritType:4},
+                    {id:105, name:"追寻大水田长征足迹", desc:"走进常德唯一长征途经地，感受军民鱼水情。", star:20, type:"map", siteId:46,
+                        targets:["找到大水田纪念地","阅读军民互动故事"],
+                        spirit:"军民鱼水情深，人民支持是长征胜利的根本保证。", spiritType:5}
+                ]
+            },
+            {
+                id:2, name:"第二章 · 对话冬生", badge:"沉浸剧情",
+                desc:"你已与红军战士冬生完成跨越时空的对话，感受到了普通战士的信仰与青春。",
+                nextDesc:"接下来，让我们一起参与红色记忆的保护与传承，成为历史的共建者……",
+                center:[28.47, 111.03], zoom:12,
+                tasks:[
+                    {id:201, name:"初识红军战士冬生", desc:"和1935年的小红军冬生打个招呼。", star:15, type:"dialog",
+                        targets:["完成首次对话","了解冬生身份"],
+                        spirit:"跨越时空对话，感受普通红军战士的信仰与青春。", spiritType:1},
+                    {id:202, name:"询问浯溪河战斗细节", desc:"听冬生亲口讲浯溪河夜袭的战斗故事。", star:20, type:"dialog",
+                        targets:["询问浯溪河战斗","听到战斗细节描述"],
+                        spirit:"从战士视角重温战斗，感悟长征精神的平凡与伟大。", spiritType:2},
+                    {id:203, name:"聆听借锅赔锅的故事", desc:"了解红军严明纪律背后的军民佳话。", star:20, type:"dialog",
+                        targets:["询问借锅赔锅故事","感受红军纪律严明"],
+                        spirit:"秋毫无犯、诚实守信，是红军赢得民心的根本所在。", spiritType:4, spiritType2:5}
+                ]
+            },
+            {
+                id:3, name:"第三章 · 红色记忆共建", badge:"众筹共建",
+                desc:"你已参与红色记忆的抢救与保护，为常德红色文化贡献了自己的力量。",
+                nextDesc:"最后，让我们走出屏幕，在真实的土地上践行长征精神……",
+                center:[29.1, 111.5], zoom:9,
+                tasks:[
+                    {id:301, name:"上传一张红色老照片", desc:"上传你身边的红色遗迹或老物件照片。", star:25, type:"upload",
+                        targets:["选择对应点位","上传照片并填写说明"],
+                        spirit:"人人参与红色记忆保护，共同守护家乡红色遗产。", spiritType:5},
+                    {id:302, name:"记录一段口述革命史", desc:"记录长辈讲述的常德革命故事。", star:30, type:"upload",
+                        targets:["填写故事内容","标注来源与出处"],
+                        spirit:"抢救口述史料，让红色记忆代代相传、永不褪色。", spiritType:5}
+                ]
+            },
+            {
+                id:4, name:"第四章 · 薪火践行", badge:"实践践行",
+                desc:"你已完成线上学习与线下实践的完整闭环，真正成为了长征精神的传承者。",
+                nextDesc:"恭喜你完成全部长征任务，征程圆满！",
+                center:[29.1, 111.4], zoom:9,
+                tasks:[
+                    {id:401, name:"重走一段红军路", desc:"实地走访一处常德红色遗址，打卡留念。", star:35, type:"practice",
+                        targets:["实地到访红色遗址","拍摄打卡照片"],
+                        spirit:"用脚步丈量红色热土，在行走中感悟长征精神的时代价值。", spiritType:2},
+                    {id:402, name:"红色宣讲小使者", desc:"向身边人讲一个常德红色故事。", star:40, type:"practice",
+                        targets:["完成一次红色宣讲","收集听众反馈"],
+                        spirit:"做长征精神的传播者，让红色基因在新时代薪火相传。", spiritType:1, spiritType2:5}
+                ]
+            }
+        ];
+
+        const medals = [
+            {id:1, name:"红星学员", score:50},
+            {id:2, name:"长征传人", score:120},
+            {id:3, name:"红色使者", score:200},
+            {id:4, name:"薪火传承者", score:300}
+        ];
+
+        // 精神维度max值与实际任务数精确对应
+        const spiritTypes = [
+            {id:1, name:"坚定信念", max:4},
+            {id:2, name:"不畏艰险", max:3},
+            {id:3, name:"实事求是", max:1},
+            {id:4, name:"纪律严明", max:2},
+            {id:5, name:"军民同心", max:5}
+        ];
+
+        // ========== 游戏状态 ==========
+        let gameState = {
+            score: 0,
+            completedTasks: [],
+            unlockedTasks: [101],
+            completedSites: [],
+            spiritProgress: [0,0,0,0,0],
+            allCompleted: false,
+            currentChapter: 1,
+            unlockedChapters: [1]
+        };
+
+        let prevMedalCount = 0;
+        let map = null;
+        let siteMarkers = {};
+        let baseRoute = null;
+        let activeRoute = null;
+        let standardLayer = null;
+        let satelliteLayer = null;
+
+        // ========== 全局工具函数 ==========
+        function showToast(text, duration = 2000) {
+            const toast = document.getElementById('globalToast');
+            toast.textContent = text;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function clearLocalProgress(){
+            if(confirm("清除本地所有进度？适合现场多人演示")){
+                localStorage.removeItem('changzhengTaskState');
+                location.reload();
+            }
+        }
+
+        function showProjectIntro() {
+            document.getElementById('introModal').classList.add('active');
+        }
+        function closeIntro() {
+            document.getElementById('introModal').classList.remove('active');
+        }
+
+        // 面板收起/展开
+        function togglePanel() {
+            const panel = document.getElementById('taskPanel');
+            const expandBtn = document.getElementById('panelExpandBtn');
+            if(panel.style.display === 'none') {
+                panel.style.display = 'flex';
+                expandBtn.classList.remove('show');
+            } else {
+                panel.style.display = 'none';
+                expandBtn.classList.add('show');
+            }
+        }
+
+        // ========== 开始游戏 ==========
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hide');
+            document.getElementById('gameScreen').classList.add('show');
+            
+            setTimeout(() => {
+                initMap();
+                initGame();
+            }, 500);
+        }
+
+        // ========== 地图初始化 ==========
+        function initMap() {
+            map = L.map('map', {
+                center: [29.10, 111.55],
+                zoom: 8,
+                minZoom:7,
+                maxZoom:14,
+                maxBounds: [[28.24, 110.29], [30.07, 112.18]],
+                maxBoundsViscosity: 1.0,
+                zoomControl: false
+            });
+
+            // 卫星影像底图（高德）
+            satelliteLayer = L.tileLayer('https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
+                attribution: '© 高德卫星影像',
+                maxNativeZoom: 18,
+                maxZoom: 20
+            }).addTo(map);
+
+            // 标准街道底图（高德，国内可访问）
+            standardLayer = L.tileLayer('https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                attribution: '© 高德地图',
+                maxNativeZoom: 18,
+                maxZoom: 20
+            });
+
+            L.control.zoom({ position: 'topright' }).addTo(map);
+
+            // 生成点位标记
+            allSites.forEach(site => {
+                let iconColor = site.type==='meet' ? '#8B008B' :
+                                site.type==='battle' ? '#FFD700' :
+                                site.type==='base' ? '#228B22' : '#FF8C00';
+                
+                const marker = L.marker(site.location, {
+                    icon: L.divIcon({
+                        html: `<div style="width:16px;height:20px;background:${iconColor};border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 5px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);"></div>`,
+                        iconSize: [16, 20],
+                        iconAnchor: [8, 20],
+                        className: ''
+                    })
+                }).addTo(map);
+
+                // 点位名称永久显示
+                marker.bindTooltip(site.name, {
+                    permanent: true,
+                    direction: 'right',
+                    offset: [10, -10],
+                    className: 'site-label',
+                    opacity: 1.0
+                });
+
+                const popupContent = `
+                    <div style="max-width:300px;font-size:12px;line-height:1.6;">
+                        <div style="font-weight:bold;font-size:15px;color:#7a0000;margin-bottom:5px;border-bottom:1px solid #d4af37;padding-bottom:3px;">${site.name}</div>
+                        <div style="color:#666;font-style:italic;margin-bottom:7px;">📅 ${site.date}</div>
+                        <div style="margin-bottom:5px;"><b style="color:#a81919;">红军行动：</b>${site.action}</div>
+                        <div><b style="color:#a81919;">历史意义：</b>${site.significance}</div>
+                        <div style="margin-top:7px;text-align:center;">
+                            <button onclick="openTaskBySite(${site.id})" style="padding:5px 10px;background:#7a0000;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
+                                查看对应任务
+                            </button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent, {maxWidth: 320});
+                siteMarkers[site.id] = marker;
+            });
+
+            // 基础行军路线（灰色虚线）
+            baseRoute = L.polyline(allSites.map(s => s.location), {
+                color: '#999',
+                weight: 2,
+                opacity: 0.3,
+                dashArray: '4, 4'
+            }).addTo(map);
+        }
+
+        // 时间轴更新
+        function updateTimeline(value) {
+            const site = allSites[value];
+            document.getElementById('timelineDate').textContent = site.date;
+            
+            // 只显示到当前时间点的路线
+            const visiblePoints = allSites.slice(0, parseInt(value)+1).map(s => s.location);
+            if(activeRoute) map.removeLayer(activeRoute);
+            if(visiblePoints.length > 1) {
+                activeRoute = L.polyline.antPath(visiblePoints, {
+                    color: '#FFD700',
+                    weight: 4,
+                    pulseColor: '#FFFFFF',
+                    delay: 800,
+                    opacity: 0.9
+                }).addTo(map);
+            }
+            map.flyTo(site.location, 10, {duration: 0.8});
+        }
+
+        // 图层切换
+        function switchLayer(type) {
+            document.querySelectorAll('.layer-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if(type === 'satellite') {
+                map.removeLayer(standardLayer);
+                map.addLayer(satelliteLayer);
+            } else {
+                map.removeLayer(satelliteLayer);
+                map.addLayer(standardLayer);
+            }
+        }
+
+        // 更新点亮路线
+        function updateActiveRoute() {
+            if(activeRoute) map.removeLayer(activeRoute);
+            
+            const completedPoints = allSites
+                .filter(s => gameState.completedSites.includes(s.id))
+                .map(s => s.location);
+            
+            if(completedPoints.length > 1) {
+                activeRoute = L.polyline.antPath(completedPoints, {
+                    color: '#FFD700',
+                    weight: 4,
+                    pulseColor: '#FFFFFF',
+                    delay: 800,
+                    opacity: 0.9
+                }).addTo(map);
+            }
+        }
+
+        // ========== 面板拖动 ==========
+        const taskPanel = document.getElementById('taskPanel');
+        const panelHeader = document.getElementById('panelHeader');
+        let isDraggingPanel = false;
+        let panelOffsetX, panelOffsetY;
+
+        panelHeader.addEventListener('mousedown', (e) => {
+            isDraggingPanel = true;
+            panelOffsetX = e.clientX - taskPanel.offsetLeft;
+            panelOffsetY = e.clientY - taskPanel.offsetTop;
+            taskPanel.style.zIndex = 1001;
+        });
+        document.addEventListener('mousemove', (e) => {
+            if(!isDraggingPanel) return;
+            let x = e.clientX - panelOffsetX;
+            let y = e.clientY - panelOffsetY;
+            const maxX = window.innerWidth - taskPanel.offsetWidth;
+            const maxY = window.innerHeight - taskPanel.offsetHeight;
+            x = Math.max(0, Math.min(x, maxX));
+            y = Math.max(0, Math.min(y, maxY));
+            taskPanel.style.left = x + 'px';
+            taskPanel.style.top = y + 'px';
+        });
+        document.addEventListener('mouseup', () => {
+            if(isDraggingPanel) {
+                isDraggingPanel = false;
+                taskPanel.style.zIndex = 900;
+            }
+        });
+
+        // ========== 功能函数 ==========
+        function toggleFullscreen() {
+            if(!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function toggleDemoMode() {
+            if(confirm('开启演示模式？将一键完成所有任务，用于现场展示。')) {
+                taskChapters.forEach(chapter => {
+                    chapter.tasks.forEach(task => {
+                        if(!gameState.completedTasks.includes(task.id)) {
+                            gameState.completedTasks.push(task.id);
+                            gameState.score += task.star;
+                            if(task.siteId) gameState.completedSites.push(task.siteId);
+                            updateSpiritProgress(task);
+                        }
+                    });
+                });
+                gameState.unlockedTasks = taskChapters.flatMap(c => c.tasks.map(t => t.id));
+                gameState.unlockedChapters = [1,2,3,4];
+                gameState.currentChapter = 4;
+                gameState.allCompleted = true;
+                saveState();
+                renderTaskList();
+                updateActiveRoute();
+                checkMedals();
+                updateFooter();
+                showEndJourneyBtn();
+                
+                setTimeout(() => {
+                    showToast('🎉 演示模式已开启，所有任务已完成');
+                }, 500);
+            }
+        }
+
+        function resetGame() {
+            if(confirm('确定要重置游戏吗？所有进度都会清零。')) {
+                localStorage.removeItem('changzhengTaskState');
+                location.reload();
+            }
+        }
+
+        function restartGame() {
+            localStorage.removeItem('changzhengTaskState');
+            location.reload();
+        }
+
+        function showOverview() {
+            const total = taskChapters.reduce((sum, c) => sum + c.tasks.length, 0);
+            const done = gameState.completedTasks.length;
+            const rate = Math.round(done / total * 100);
+            
+            document.getElementById('ovTasks').textContent = `${done} / ${total}`;
+            document.getElementById('ovSites').textContent = `${gameState.completedSites.length} 处`;
+            document.getElementById('ovScore').textContent = `${gameState.score} 颗`;
+            document.getElementById('ovMedals').textContent = `${medals.filter(m => gameState.score >= m.score).length} / ${medals.length} 枚`;
+            document.getElementById('ovRate').textContent = `${rate}%`;
+            
+            document.getElementById('overviewModal').classList.add('active');
+        }
+        function closeOverview() {
+            document.getElementById('overviewModal').classList.remove('active');
+        }
+
+        // 精神图谱
+        function showSpiritGraph() {
+            spiritTypes.forEach((s, i) => {
+                const percent = Math.min(100, Math.round(gameState.spiritProgress[i] / s.max * 100));
+                document.getElementById('spirit' + (i+1)).textContent = percent + '%';
+                document.getElementById('spirit' + (i+1) + 'Fill').style.width = percent + '%';
+            });
+            document.getElementById('spiritModal').classList.add('active');
+        }
+        function closeSpiritModal() {
+            document.getElementById('spiritModal').classList.remove('active');
+        }
+
+        function updateSpiritProgress(task) {
+            if(task.spiritType) {
+                gameState.spiritProgress[task.spiritType - 1]++;
+            }
+            if(task.spiritType2) {
+                gameState.spiritProgress[task.spiritType2 - 1]++;
+            }
+        }
+
+        // 结束征程相关
+        function showEndJourneyBtn() {
+            document.getElementById('endJourneyBtn').classList.add('show');
+        }
+
+        function confirmEndJourney() {
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        function endJourney() {
+            closeConfirm();
+            setTimeout(() => {
+                showEndScreen();
+            }, 300);
+        }
+
+        // ========== 章节切换逻辑 ==========
+        function checkChapterComplete(taskId) {
+            const chapter = taskChapters.find(c => c.tasks.some(t => t.id === taskId));
+            if (!chapter) return false;
+            
+            const allDone = chapter.tasks.every(t => gameState.completedTasks.includes(t.id));
+            if (allDone && chapter.id === gameState.currentChapter && chapter.id < taskChapters.length) {
+                setTimeout(() => showChapterTransition(chapter), 800);
+                return true;
+            }
+            return false;
+        }
+
+        function showChapterTransition(chapter) {
+            const chapterTaskIds = chapter.tasks.map(t => t.id);
+            const chapterStars = chapter.tasks.reduce((sum, t) => sum + t.star, 0);
+            const chapterSites = chapter.tasks.filter(t => t.siteId).length;
+
+            document.getElementById('transitionBadge').textContent = `第${chapter.id}章完成`;
+            document.getElementById('transitionTitle').textContent = chapter.name.replace(/^第.+章 · /, '');
+            document.getElementById('transitionDesc').innerHTML = chapter.desc + '<br>' + chapter.nextDesc;
+            document.getElementById('transitionTasks').textContent = chapter.tasks.length;
+            document.getElementById('transitionStars').textContent = chapterStars;
+            document.getElementById('transitionSites').textContent = chapterSites;
+
+            document.getElementById('chapterTransitionModal').classList.add('active');
+        }
+
+        function goToNextChapter() {
+            document.getElementById('chapterTransitionModal').classList.remove('active');
+            const nextChapterId = gameState.currentChapter + 1;
+            
+            if (nextChapterId <= taskChapters.length) {
+                gameState.currentChapter = nextChapterId;
+                if (!gameState.unlockedChapters.includes(nextChapterId)) {
+                    gameState.unlockedChapters.push(nextChapterId);
+                }
+                
+                // 解锁下一章第一个任务
+                const nextChapter = taskChapters.find(c => c.id === nextChapterId);
+                if (nextChapter && nextChapter.tasks.length > 0) {
+                    const firstTaskId = nextChapter.tasks[0].id;
+                    if (!gameState.unlockedTasks.includes(firstTaskId)) {
+                        gameState.unlockedTasks.push(firstTaskId);
+                    }
+                }
+
+                // 地图飞行到对应章节区域
+                flyToChapterArea(nextChapterId);
+                
+                saveState();
+                renderTaskList();
+                showToast(`📖 进入 ${nextChapter.name}`);
+            }
+        }
+
+        function flyToChapterArea(chapterId) {
+            const chapter = taskChapters.find(c => c.id === chapterId);
+            if (chapter && map) {
+                map.flyTo(chapter.center, chapter.zoom, { duration: 1.5 });
+            }
+        }
+
+        // ========== 任务渲染 ==========
+        function renderTaskList() {
+            const container = document.getElementById('taskList');
+            container.innerHTML = '';
+            taskChapters.forEach((chapter, index) => {
+                const isUnlocked = gameState.unlockedChapters.includes(chapter.id);
+                const isCurrent = chapter.id === gameState.currentChapter;
+                const completedCount = chapter.tasks.filter(t => gameState.completedTasks.includes(t.id)).length;
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.innerHTML = `
+                    <div class="chapter-title ${!isUnlocked ? 'locked' : ''}" onclick="toggleChapter(${index})">
+                        <span>${!isUnlocked ? '🔒 ' : ''}${chapter.name}</span>
+                        <span class="chapter-badge">${chapter.badge} · ${completedCount}/${chapter.tasks.length}</span>
+                    </div>
+                    <div class="chapter-content ${!isCurrent ? 'collapsed' : ''}" id="chapterContent${index}">
+                    </div>
+                `;
+                const taskList = chapterDiv.querySelector(`#chapterContent${index}`);
+                chapter.tasks.forEach(task => {
+                    const isCompleted = gameState.completedTasks.includes(task.id);
+                    const isUnlockedTask = gameState.unlockedTasks.includes(task.id);
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = `task-item ${isCompleted ? 'completed' : ''} ${!isUnlockedTask ? 'locked' : ''}`;
+                    taskDiv.innerHTML = `
+                        <div class="task-top">
+                            <span class="task-name">${isUnlockedTask ? '' : '🔒 '}${task.name}</span>
+                            <span class="task-star">★ ${task.star}</span>
+                        </div>
+                        <div class="task-desc">${task.desc}</div>
+                        <span class="task-tag">${isCompleted ? '已完成' : getTaskTypeText(task.type)}</span>
+                    `;
+                    if(isUnlockedTask) taskDiv.onclick = () => openTask(task);
+                    taskList.appendChild(taskDiv);
+                });
+                chapterDiv.appendChild(taskList);
+                container.appendChild(chapterDiv);
+            });
+            updateProgress();
+        }
+
+        function toggleChapter(index) {
+            const chapter = taskChapters[index];
+            if (!gameState.unlockedChapters.includes(chapter.id)) {
+                showToast('该章节尚未解锁，请先完成前一章任务');
+                return;
+            }
+            
+            const content = document.getElementById('chapterContent' + index);
+            content.classList.toggle('collapsed');
+        }
+
+        function getTaskTypeText(type) {
+            const map = {'map':'地图探索','dialog':'剧情对话','upload':'史料众筹','practice':'线下实践'};
+            return map[type] || '任务';
+        }
+
+        function updateProgress() {
+            const total = taskChapters.reduce((sum, c) => sum + c.tasks.length, 0);
+            const done = gameState.completedTasks.length;
+            document.getElementById('taskProgress').textContent = `${done}/${total} 任务`;
+            document.getElementById('totalScore').textContent = gameState.score;
+            checkMedals();
+            updateFooter();
+
+            // 检查是否全部完成
+            if(done >= total && !gameState.allCompleted) {
+                gameState.allCompleted = true;
+                showEndJourneyBtn();
+                setTimeout(() => {
+                    showToast('📢 所有任务已完成！点击顶部「结束征程」生成专属传承证书');
+                }, 500);
+            }
+        }
+
+        function updateFooter() {
+            document.getElementById('siteCount').textContent = gameState.completedSites.length;
+        }
+
+        function checkMedals() {
+            let count = 0;
+            medals.forEach(medal => {
+                const el = document.getElementById('medal' + medal.id);
+                if(gameState.score >= medal.score) {
+                    if(!el.classList.contains('unlocked')) {
+                        el.classList.add('unlocked');
+                        count++;
+                        if(count > prevMedalCount) {
+                            showToast(`🏅 解锁勋章：${medal.name}`);
+                        }
+                    }
+                    count++;
+                } else {
+                    el.classList.remove('unlocked');
+                }
+            });
+            prevMedalCount = count;
+            document.getElementById('medalCount').textContent = count;
+        }
+
+        // ========== 任务弹窗 ==========
+        let currentTask = null;
+        let located = false;
+
+        function openTask(task) {
+            currentTask = task;
+            located = false;
+            const modal = document.getElementById('taskModal');
+            const body = document.getElementById('modalBody');
+            document.getElementById('modalTaskName').textContent = task.name;
+            const isCompleted = gameState.completedTasks.includes(task.id);
+
+            let content = `
+                <div class="modal-desc">${task.desc}</div>
+                
+                <div class="spirit-box">
+                    <div class="spirit-title">💡 精神解码</div>
+                    <div class="spirit-text">${task.spirit}</div>
+                </div>
+
+                <div class="modal-target">
+                    <div class="target-title">📋 任务目标</div>
+                    <ul class="target-list">
+                        ${task.targets.map(t => `<li class="${isCompleted ? 'done' : ''}">${t}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="reward-box">
+                    <span class="reward-text">🎁 任务奖励</span>
+                    <span class="reward-star">★ ${task.star} 红星</span>
+                </div>
+            `;
+
+            if(task.type === 'map') {
+                content += `
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="closeModal()">返回</button>
+                        <button class="btn btn-primary" id="locateBtn" onclick="goToSite(${task.siteId})">定位到卫星地图</button>
+                    </div>
+                    <div class="tip-text">💡 点击定位后，地图跳转至对应点位并打开详情<br>查看完毕后，点击下方按钮完成任务</div>
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-success" id="completeBtn" onclick="completeCurrentTask()" disabled style="width:100%;">确认完成任务</button>
+                    </div>
+                `;
+            } else if(task.type === 'dialog') {
+                content += renderDialogContent(task, isCompleted);
+            } else if(task.type === 'upload') {
+                content += renderUploadContent(task, isCompleted);
+            } else if(task.type === 'practice') {
+                content += renderPracticeContent(task, isCompleted);
+            }
+
+            body.innerHTML = content;
+            modal.classList.add('active');
+        }
+
+        function openTaskBySite(siteId) {
+            let task = null;
+            for(let chapter of taskChapters) {
+                task = chapter.tasks.find(t => t.siteId === siteId);
+                if(task) break;
+            }
+            if(task && gameState.unlockedTasks.includes(task.id)) {
+                map.closePopup();
+                openTask(task);
+            } else if(task) {
+                showToast('该任务尚未解锁，请先完成前置任务');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('active');
+            currentTask = null;
+            located = false;
+        }
+
+        function goToSite(siteId) {
+            const site = allSites.find(s => s.id === siteId);
+            if(site) {
+                map.flyTo(site.location, 13, {duration: 1.5});
+                setTimeout(() => siteMarkers[siteId].openPopup(), 1000);
+                
+                const btn = document.getElementById('locateBtn');
+                btn.textContent = '✓ 已定位，查看地图详情';
+                btn.disabled = true;
+                document.getElementById('completeBtn').disabled = false;
+                located = true;
+            }
+        }
+
+        function completeCurrentTask() {
+            if(!currentTask) return;
+            completeTask(currentTask);
+            closeModal();
+        }
+
+        // 对话任务（智能回复+回车发送）
+        function renderDialogContent(task, isCompleted) {
+            const dialogs = {
+                201: [
+                    {npc:"你好呀！我叫冬生，是红六军团的战士，看你们的打扮……是从未来来的？"},
+                    {user:"你好冬生！我们是2026年的大学生，想了解你们的故事。"},
+                    {npc:"2026年……那时候，老百姓都过上好日子了吧？我们在这里打仗，就是为了你们能过上安稳日子哩！"}
+                ],
+                202: [
+                    {user:"冬生，给我们讲讲浯溪河那场仗吧！"},
+                    {npc:"嗨，那仗打得才叫过瘾！那天凌晨天还没亮，我们急行军七十里地，两路夹击。敌人还在睡觉呢，我们就冲上去了！"},
+                    {npc:"贺龙总指挥指挥得好，避实击虚，一夜就歼了敌人两个团，第二天就进了桃源城！老百姓都夹道欢迎呢！"}
+                ],
+                203: [
+                    {user:"听说有个借锅赔锅的故事？"},
+                    {npc:"有啊！那时候我们借了老乡一口锅做饭，走的时候不小心碰破了。首长说，红军纪律严明，损坏东西一定要赔。"},
+                    {npc:"后来我们赔了老乡一块银元，老乡直说不要不要，可我们必须按规矩来。还有贺龙军长赠刀、送桐油灯的故事呢！这就是我们红军的纪律！"}
+                ]
+            };
+            const list = dialogs[task.id] || [];
+            return `
+                <div class="dialog-box" id="dialogBox">
+                    ${list.map(d => `
+                        <div class="dialog-item ${d.npc ? 'npc' : 'user'}">
+                            <div class="dialog-text">${d.npc || d.user}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="dialog-input-area">
+                    <button class="voice-btn" title="语音播报" onclick="playVoice()">🔊</button>
+                    <input type="text" class="dialog-input" placeholder="输入你想说的话，按回车发送..." id="dialogInput" onkeydown="if(event.key==='Enter') sendDialog()">
+                    <button class="btn btn-primary" style="flex:none;padding:0 16px;" onclick="sendDialog()" ${isCompleted ? 'disabled' : ''}>发送</button>
+                </div>
+                <div class="tip-text">💡 本项目预留AI数字人接口，正式版可接入语音/虚拟形象交互</div>
+                <div style="margin-top:12px;">
+                    <button class="btn btn-success" style="width:100%;" onclick="completeCurrentTask()" ${isCompleted ? 'disabled' : ''}>
+                        ${isCompleted ? '已完成' : '确认完成任务'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // 智能对话回复（调用关键词库）
+        function sendDialog() {
+            const input = document.getElementById('dialogInput');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const box = document.getElementById('dialogBox');
+            // 添加用户消息
+            box.innerHTML += `
+                <div class="dialog-item user">
+                    <div class="dialog-text">${text}</div>
+                </div>
+            `;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+
+            // 调用关键词匹配获取回复
+            const reply = getReply(text);
+
+            // 延迟回复，模拟思考
+            setTimeout(() => {
+                box.innerHTML += `
+                    <div class="dialog-item npc">
+                        <div class="dialog-text">${reply}</div>
+                    </div>
+                `;
+                box.scrollTop = box.scrollHeight;
+            }, 800);
+        }
+
+        function playVoice() {
+            showToast('🔊 正在播放冬生的讲述...（正式版接入AI数字人语音合成）');
+        }
+
+        // 众筹任务
+        function renderUploadContent(task, isCompleted) {
+            return `
+                <div class="upload-area" onclick="document.getElementById('uploadFile').click()">
+                    <div style="font-size:28px;margin-bottom:6px;">📷</div>
+                    <div>点击上传照片/文档</div>
+                    <div style="font-size:11px;color:#999;margin-top:3px;">支持JPG、PNG格式</div>
+                    <input type="file" id="uploadFile" style="display:none;" accept="image/*">
+                </div>
+                <div class="form-item">
+                    <label>对应遗址</label>
+                    <select style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;">
+                        <option>请选择对应的红色遗址</option>
+                        ${allSites.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label>内容说明</label>
+                    <textarea rows="2" placeholder="请描述照片内容、历史背景..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="closeModal()">返回</button>
+                    <button class="btn btn-primary" onclick="submitUpload()" ${isCompleted ? 'disabled' : ''}>提交审核</button>
+                </div>
+                <div class="tip-text">💡 当前为演示版本；正式部署对接常德市党史研究室接口，完成史料入库审核<br>你的史料将收入「常德红色记忆库」永久保存</div>
+                <div style="margin-top:12px;">
+                    <button class="btn btn-success" style="width:100%;" onclick="completeCurrentTask()" ${isCompleted ? 'disabled' : ''}>
+                        ${isCompleted ? '已完成' : '确认完成任务'}
+                    </button>
+                </div>
+            `;
+        }
+        function submitUpload() {
+            showToast('✅ 提交成功！党史研究室将在3个工作日内完成审核');
+        }
+
+        // 实践任务
+        function renderPracticeContent(task, isCompleted) {
+            return `
+                <div class="modal-desc">💡 实践提示：请在线下完成对应实践活动，上传凭证后获得奖励。</div>
+                <div class="upload-area" onclick="document.getElementById('practiceFile').click()">
+                    <div style="font-size:28px;margin-bottom:6px;">📸</div>
+                    <div>上传实践凭证（照片/视频/证明）</div>
+                    <input type="file" id="practiceFile" style="display:none;" accept="image/*,video/*">
+                </div>
+                <div class="form-item">
+                    <label>实践心得</label>
+                    <textarea rows="2" placeholder="分享你的实践感悟..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="closeModal()">返回</button>
+                    <button class="btn btn-primary" onclick="submitPractice()">提交验收</button>
+                </div>
+                <div class="tip-text">💡 提交后经指导老师审核通过，发放对应红星奖励<br>优秀作品将入选高校红色育人案例库</div>
+                <div style="margin-top:12px;">
+                    <button class="btn btn-success" style="width:100%;" onclick="completeCurrentTask()" ${isCompleted ? 'disabled' : ''}>
+                        ${isCompleted ? '已完成' : '确认完成任务'}
+                    </button>
+                </div>
+            `;
+        }
+        function submitPractice() {
+            showToast('✅ 提交成功！指导老师审核通过后发放对应红星奖励');
+        }
+
+        // ========== 任务完成逻辑 ==========
+        function completeTask(task) {
+            if(gameState.completedTasks.includes(task.id)) return;
+            gameState.completedTasks.push(task.id);
+            gameState.score += task.star;
+
+            if(task.siteId) {
+                gameState.completedSites.push(task.siteId);
+                const marker = siteMarkers[task.siteId];
+                if(marker && marker._icon) {
+                    marker._icon.style.animation = 'siteGlow 2s ease-in-out infinite';
+                }
+                updateActiveRoute();
+            }
+
+            // 更新精神图谱
+            updateSpiritProgress(task);
+
+            unlockNextTask(task.id);
+            saveState();
+            renderTaskList();
+
+            setTimeout(() => {
+                showToast(`🎉 任务完成！获得 ${task.star} 颗红星`);
+            }, 200);
+
+            // 检查章节是否完成
+            checkChapterComplete(task.id);
+        }
+
+        function unlockNextTask(currentId) {
+            for(let chapter of taskChapters) {
+                const idx = chapter.tasks.findIndex(t => t.id === currentId);
+                if(idx > -1) {
+                    if(idx < chapter.tasks.length - 1) {
+                        const nextId = chapter.tasks[idx + 1].id;
+                        if(!gameState.unlockedTasks.includes(nextId)) gameState.unlockedTasks.push(nextId);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function showEndScreen() {
+            document.getElementById('endScore').textContent = gameState.score;
+            document.getElementById('endSites').textContent = gameState.completedSites.length;
+            
+            // 动态渲染结局精神图谱
+            spiritTypes.forEach((s, i) => {
+                const percent = Math.min(100, Math.round(gameState.spiritProgress[i] / s.max * 100));
+                document.getElementById('endSpirit' + (i+1)).textContent = percent + '%';
+                document.getElementById('endSpirit' + (i+1) + 'Fill').style.width = percent + '%';
+            });
+
+            document.getElementById('endScreen').classList.add('show');
+        }
+
+        // 生成传承证书
+        function generateCertificate() {
+            const certNo = 'CD-CZ-2026-' + Math.floor(Math.random()*1000).toString().padStart(4,'0');
+            showToast('🎖️ 传承证书已生成，可截图保存分享');
+            alert('🎖️ 传承证书\n\n证书编号：' + certNo + '\n获得称号：薪火传承者\n覆盖遗址：' + gameState.completedSites.length + ' 处\n累计红星：' + gameState.score + ' 颗\n\n正式版将生成高清证书图片，支持下载与分享，感谢您的参与！');
+        }
+
+        // ========== 存储 ==========
+        function saveState() {
+            localStorage.setItem('changzhengTaskState', JSON.stringify(gameState));
+        }
+        function loadState() {
+            const saved = localStorage.getItem('changzhengTaskState');
+            if(saved) gameState = JSON.parse(saved);
+        }
+
+        // ========== 初始化 ==========
+        function initGame() {
+            loadState();
+            renderTaskList();
+            
+            gameState.completedSites.forEach(id => {
+                if(siteMarkers[id] && siteMarkers[id]._icon) {
+                    siteMarkers[id]._icon.style.animation = 'siteGlow 2s ease-in-out infinite';
+                }
+            });
+            updateActiveRoute();
+
+            // 如果已经全部完成，显示结束按钮
+            if(gameState.allCompleted) {
+                showEndJourneyBtn();
+            }
+
+            // 初始化勋章计数
+            prevMedalCount = medals.filter(m => gameState.score >= m.score).length;
+
+            // 初始地图视角定位到当前章节
+            flyToChapterArea(gameState.currentChapter);
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('taskModal').addEventListener('click', e => {
+            if(e.target.id === 'taskModal') closeModal();
+        });
+        document.getElementById('overviewModal').addEventListener('click', e => {
+            if(e.target.id === 'overviewModal') closeOverview();
+        });
+        document.getElementById('spiritModal').addEventListener('click', e => {
+            if(e.target.id === 'spiritModal') closeSpiritModal();
+        });
+        document.getElementById('confirmModal').addEventListener('click', e => {
+            if(e.target.id === 'confirmModal') closeConfirm();
+        });
+        document.getElementById('introModal').addEventListener('click', e => {
+            if(e.target.id === 'introModal') closeIntro();
+        });
+        document.getElementById('chapterTransitionModal').addEventListener('click', e => {
+            if(e.target.id === 'chapterTransitionModal') {
+                goToNextChapter();
+            }
+        });
+
+    </script>
+</body>
+</html>
